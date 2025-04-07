@@ -28,6 +28,13 @@ const DEPARTMENT_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 const VEHICLE_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Vehicle"
 const VEHICLE_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 
+// Vehicle Make and Model API endpoints
+const VEHICLE_MAKE_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Vehicle Make"
+const VEHICLE_MAKE_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
+
+const VEHICLE_MODEL_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Vehicle Model"
+const VEHICLE_MODEL_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
+
 // Driver API endpoints
 const DRIVER_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Driver"
 const DRIVER_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
@@ -672,6 +679,95 @@ export async function createVehicle(vehicleData: {
   }
 }
 
+// New functions for vehicle makes and models
+export async function fetchVehicleMakes() {
+  try {
+    const currentUser = await getCurrentUser()
+
+    if (!currentUser) {
+      return { error: "You must be logged in to view vehicle makes." }
+    }
+
+    const response = await fetch(VEHICLE_MAKE_API_URL, {
+      method: "GET",
+      headers: {
+        Authorization: `token ${VEHICLE_MAKE_API_TOKEN}`,
+      },
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      return { error: errorData.message || "Failed to fetch vehicle makes." }
+    }
+
+    const data = await response.json()
+    return { data: data.data || [] }
+  } catch (error) {
+    console.error("Error fetching vehicle makes:", error)
+
+    // Fallback to mock data if API fails
+    const mockVehicleMakes = [
+      { name: "Toyota" },
+      { name: "Honda" },
+      { name: "Ford" },
+      { name: "Chevrolet" },
+      { name: "Nissan" },
+      { name: "BMW" },
+      { name: "Mercedes-Benz" },
+      { name: "Audi" },
+      { name: "Volkswagen" },
+      { name: "Hyundai" },
+    ]
+
+    return { data: mockVehicleMakes }
+  }
+}
+
+export async function fetchVehicleModels() {
+  try {
+    const currentUser = await getCurrentUser()
+
+    if (!currentUser) {
+      return { error: "You must be logged in to view vehicle models." }
+    }
+
+    const response = await fetch(VEHICLE_MODEL_API_URL, {
+      method: "GET",
+      headers: {
+        Authorization: `token ${VEHICLE_MODEL_API_TOKEN}`,
+      },
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      return { error: errorData.message || "Failed to fetch vehicle models." }
+    }
+
+    const data = await response.json()
+    return { data: data.data || [] }
+  } catch (error) {
+    console.error("Error fetching vehicle models:", error)
+
+    // Fallback to mock data if API fails
+    const mockVehicleModels = [
+      { name: "Corolla", make: "Toyota" },
+      { name: "Camry", make: "Toyota" },
+      { name: "Civic", make: "Honda" },
+      { name: "Accord", make: "Honda" },
+      { name: "F-150", make: "Ford" },
+      { name: "Mustang", make: "Ford" },
+      { name: "Silverado", make: "Chevrolet" },
+      { name: "Malibu", make: "Chevrolet" },
+      { name: "Altima", make: "Nissan" },
+      { name: "Sentra", make: "Nissan" },
+    ]
+
+    return { data: mockVehicleModels }
+  }
+}
+
 // Driver management functions
 export async function fetchDrivers() {
   try {
@@ -702,7 +798,7 @@ export async function fetchDrivers() {
     // Fallback to mock data if API fails
     const mockDrivers = [
       {
-        name: "DRV001",
+        name: "HR-DRI-2025-00001",
         first_name: "John",
         last_name: "Doe",
         email: "john.d@example.com",
@@ -714,7 +810,7 @@ export async function fetchDrivers() {
         vehicle_name: "Toyota Corolla (ABC123)",
       },
       {
-        name: "DRV002",
+        name: "HR-DRI-2025-00002",
         first_name: "Jane",
         last_name: "Smith",
         email: "jane.s@example.com",
@@ -724,42 +820,6 @@ export async function fetchDrivers() {
         status: "Active",
         vehicle: "VEH002",
         vehicle_name: "Honda Civic (DEF456)",
-      },
-      {
-        name: "DRV003",
-        first_name: "Robert",
-        last_name: "Johnson",
-        email: "robert.j@example.com",
-        phone: "+1122334455",
-        license_number: "DL54321",
-        license_expiry: "2023-12-01",
-        status: "Active",
-        vehicle: "VEH004",
-        vehicle_name: "Chevrolet Silverado (JKL012)",
-      },
-      {
-        name: "DRV004",
-        first_name: "Sarah",
-        last_name: "Williams",
-        email: "sarah.w@example.com",
-        phone: "+1555666777",
-        license_number: "DL98765",
-        license_expiry: "2024-03-22",
-        status: "Inactive",
-        vehicle: null,
-        vehicle_name: null,
-      },
-      {
-        name: "DRV005",
-        first_name: "Michael",
-        last_name: "Brown",
-        email: "michael.b@example.com",
-        phone: "+1999888777",
-        license_number: "DL13579",
-        license_expiry: "2025-01-10",
-        status: "On Leave",
-        vehicle: null,
-        vehicle_name: null,
       },
     ]
 

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { createVehicle, fetchDrivers } from "@/lib/actions"
+import { createVehicle, fetchDrivers, fetchVehicleMakes, fetchVehicleModels } from "@/lib/actions"
 import { Loader2, ListFilter, ArrowLeft } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -35,8 +35,17 @@ const formSchema = z.object({
 
 type Driver = {
   name: string
-  first_name: string
-  last_name: string
+  first_name?: string
+  last_name?: string
+}
+
+type VehicleMake = {
+  name: string
+}
+
+type VehicleModel = {
+  name: string
+  make?: string
 }
 
 export function NewVehicleForm() {
@@ -44,8 +53,15 @@ export function NewVehicleForm() {
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [drivers, setDrivers] = useState<Driver[]>([])
+  const [vehicleMakes, setVehicleMakes] = useState<VehicleMake[]>([])
+  const [vehicleModels, setVehicleModels] = useState<VehicleModel[]>([])
+  const [filteredModels, setFilteredModels] = useState<VehicleModel[]>([])
   const [isLoadingDrivers, setIsLoadingDrivers] = useState(true)
+  const [isLoadingMakes, setIsLoadingMakes] = useState(true)
+  const [isLoadingModels, setIsLoadingModels] = useState(true)
   const [isDriverDropdownOpen, setIsDriverDropdownOpen] = useState(false)
+  const [isMakeDropdownOpen, setIsMakeDropdownOpen] = useState(false)
+  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
@@ -65,6 +81,18 @@ export function NewVehicleForm() {
       wheels: 4,
     },
   })
+
+  const selectedMake = form.watch("make")
+
+  // Filter models based on selected make
+  useEffect(() => {
+    if (selectedMake && vehicleModels.length > 0) {
+      const filtered = vehicleModels.filter((model) => !model.make || model.make === selectedMake)
+      setFilteredModels(filtered)
+    } else {
+      setFilteredModels(vehicleModels)
+    }
+  }, [selectedMake, vehicleModels])
 
   const loadDrivers = async () => {
     try {
@@ -95,14 +123,87 @@ export function NewVehicleForm() {
     }
   }
 
+  const loadVehicleMakes = async () => {
+    try {
+      setIsLoadingMakes(true)
+      const result = await fetchVehicleMakes()
+
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        })
+        return
+      }
+
+      if (result.data) {
+        setVehicleMakes(result.data)
+      }
+    } catch (error) {
+      console.error("Error loading vehicle makes:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load vehicle makes. Please try again.",
+      })
+    } finally {
+      setIsLoadingMakes(false)
+    }
+  }
+
+  const loadVehicleModels = async () => {
+    try {
+      setIsLoadingModels(true)
+      const result = await fetchVehicleModels()
+
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        })
+        return
+      }
+
+      if (result.data) {
+        setVehicleModels(result.data)
+        setFilteredModels(result.data)
+      }
+    } catch (error) {
+      console.error("Error loading vehicle models:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load vehicle models. Please try again.",
+      })
+    } finally {
+      setIsLoadingModels(false)
+    }
+  }
+
   useEffect(() => {
     loadDrivers()
+    loadVehicleMakes()
+    loadVehicleModels()
   }, [toast])
 
   // Refresh drivers when dropdown is opened
   const handleDriverDropdownOpen = () => {
     setIsDriverDropdownOpen(true)
     loadDrivers()
+  }
+
+  // Refresh makes when dropdown is opened
+  const handleMakeDropdownOpen = () => {
+    setIsMakeDropdownOpen(true)
+    loadVehicleMakes()
+  }
+
+  // Refresh models when dropdown is opened
+  const handleModelDropdownOpen = () => {
+    setIsModelDropdownOpen(true)
+    loadVehicleModels()
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -147,12 +248,12 @@ export function NewVehicleForm() {
     }
   }
 
-  if (isLoadingDrivers && !isDriverDropdownOpen) {
+  if (isLoadingDrivers || isLoadingMakes || isLoadingModels) {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="flex flex-col items-center gap-2">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-sm text-gray-500">Loading drivers...</p>
+          <p className="text-sm text-gray-500">Loading data...</p>
         </div>
       </div>
     )
@@ -201,9 +302,20 @@ export function NewVehicleForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Make</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Toyota" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a make" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {vehicleMakes.map((make) => (
+                          <SelectItem key={make.name} value={make.name}>
+                            {make.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -215,9 +327,20 @@ export function NewVehicleForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Model</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Corolla" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!selectedMake}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={selectedMake ? "Select a model" : "Select a make first"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {filteredModels.map((model) => (
+                          <SelectItem key={model.name} value={model.name}>
+                            {model.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -359,32 +482,19 @@ export function NewVehicleForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assigned Driver</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      onOpenChange={handleDriverDropdownOpen}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a driver (optional)" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {isLoadingDrivers && isDriverDropdownOpen ? (
-                          <div className="flex items-center justify-center py-2">
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            <span>Loading drivers...</span>
-                          </div>
-                        ) : (
-                          <>
-                            <SelectItem value="none">None</SelectItem>
-                            {drivers.map((driver) => (
-                              <SelectItem key={driver.name} value={driver.name}>
-                                {driver.first_name} {driver.last_name}
-                              </SelectItem>
-                            ))}
-                          </>
-                        )}
+                        <SelectItem value="none">None</SelectItem>
+                        {drivers.map((driver) => (
+                          <SelectItem key={driver.name} value={driver.name}>
+                            {driver.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormDescription>Optionally assign a driver to this vehicle.</FormDescription>
