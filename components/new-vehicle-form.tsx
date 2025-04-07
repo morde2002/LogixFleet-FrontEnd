@@ -572,19 +572,19 @@ export function NewVehicleForm() {
                 type="button"
                 variant="outline"
                 onClick={() => router.push("/dashboard/vehicles")}
-                disabled={isSubmitting}
+              
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
-                {isSubmitting ? (
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+           
                   <>
                     <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></span>
                     Creating...
                   </>
-                ) : (
+              
                   "Add Vehicle"
-                )}
+              
               </Button>
             </div>
           </form>
