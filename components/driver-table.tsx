@@ -75,7 +75,7 @@ export function DriverTable() {
   }, [toast])
 
   const handleRefresh = () => {
-    loadDrivers(true)
+    router.refresh()
   }
 
   const filteredDrivers = drivers.filter((driver) => {

@@ -76,7 +76,7 @@ export function VehicleTable() {
   }, [toast])
 
   const handleRefresh = () => {
-    loadVehicles(true)
+    router.refresh()
   }
 
   // Get unique vehicle types for filter

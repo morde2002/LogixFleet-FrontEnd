@@ -80,7 +80,7 @@ export function UserTable() {
   }, [toast])
 
   const handleRefresh = () => {
-    loadUsers(true)
+    router.refresh()
   }
 
   const filteredUsers = users.filter((user) => {
