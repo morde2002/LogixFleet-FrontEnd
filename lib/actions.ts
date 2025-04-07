@@ -39,6 +39,10 @@ const VEHICLE_MODEL_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 const DRIVER_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Driver"
 const DRIVER_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 
+// Add this new API endpoint for years
+const YEAR_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Year"
+const YEAR_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
+
 export async function login({
   email,
   password,
@@ -777,13 +781,16 @@ export async function fetchDrivers() {
       return { error: "You must be logged in to view drivers." }
     }
 
-    const response = await fetch(DRIVER_API_URL, {
-      method: "GET",
-      headers: {
-        Authorization: `token ${DRIVER_API_TOKEN}`,
+    const response = await fetch(
+      `${DRIVER_API_URL}?fields=["name","email","country","cell_number","first_name","last_name","national_id","start_date","end_date","status"]`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `token ${DRIVER_API_TOKEN}`,
+        },
+        cache: "no-store",
       },
-      cache: "no-store",
-    })
+    )
 
     if (!response.ok) {
       const errorData = await response.json()
@@ -802,24 +809,24 @@ export async function fetchDrivers() {
         first_name: "John",
         last_name: "Doe",
         email: "john.d@example.com",
-        phone: "+1234567890",
-        license_number: "DL12345",
-        license_expiry: "2025-06-30",
+        cell_number: "+1234567890",
+        country: "USA",
+        national_id: "123456789",
+        start_date: "2023-01-15",
+        end_date: "",
         status: "Active",
-        vehicle: "VEH001",
-        vehicle_name: "Toyota Corolla (ABC123)",
       },
       {
         name: "HR-DRI-2025-00002",
         first_name: "Jane",
         last_name: "Smith",
         email: "jane.s@example.com",
-        phone: "+1987654321",
-        license_number: "DL67890",
-        license_expiry: "2024-08-15",
+        cell_number: "+1987654321",
+        country: "Canada",
+        national_id: "987654321",
+        start_date: "2022-06-10",
+        end_date: "",
         status: "Active",
-        vehicle: "VEH002",
-        vehicle_name: "Honda Civic (DEF456)",
       },
     ]
 
@@ -881,6 +888,43 @@ export async function createDriver(driverData: {
   } catch (error) {
     console.error("Error creating driver:", error)
     return { error: "An error occurred while creating the driver." }
+  }
+}
+
+// Add a new function to fetch years
+export async function fetchYears() {
+  try {
+    const currentUser = await getCurrentUser()
+
+    if (!currentUser) {
+      return { error: "You must be logged in to view years." }
+    }
+
+    const response = await fetch(YEAR_API_URL, {
+      method: "GET",
+      headers: {
+        Authorization: `token ${YEAR_API_TOKEN}`,
+      },
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      return { error: errorData.message || "Failed to fetch years." }
+    }
+
+    const data = await response.json()
+    return { data: data.data || [] }
+  } catch (error) {
+    console.error("Error fetching years:", error)
+
+    // Fallback to mock data if API fails
+    const currentYear = new Date().getFullYear()
+    const mockYears = Array.from({ length: 30 }, (_, i) => ({
+      name: String(currentYear - i),
+    }))
+
+    return { data: mockYears }
   }
 }
 

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { createVehicle, fetchDrivers, fetchVehicleMakes, fetchVehicleModels } from "@/lib/actions"
+import { createVehicle, fetchDrivers, fetchVehicleMakes, fetchVehicleModels, fetchYears } from "@/lib/actions"
 import { Loader2, ListFilter, ArrowLeft } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -62,6 +62,10 @@ export function NewVehicleForm() {
   const [isDriverDropdownOpen, setIsDriverDropdownOpen] = useState(false)
   const [isMakeDropdownOpen, setIsMakeDropdownOpen] = useState(false)
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false)
+  // Add years state and loading state
+  const [years, setYears] = useState<{ name: string }[]>([])
+  const [isLoadingYears, setIsLoadingYears] = useState(true)
+  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
@@ -182,10 +186,41 @@ export function NewVehicleForm() {
     }
   }
 
+  // Add a function to load years
+  const loadYears = async () => {
+    try {
+      setIsLoadingYears(true)
+      const result = await fetchYears()
+
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        })
+        return
+      }
+
+      if (result.data) {
+        setYears(result.data)
+      }
+    } catch (error) {
+      console.error("Error loading years:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load years. Please try again.",
+      })
+    } finally {
+      setIsLoadingYears(false)
+    }
+  }
+
   useEffect(() => {
     loadDrivers()
     loadVehicleMakes()
     loadVehicleModels()
+    loadYears()
   }, [toast])
 
   // Refresh drivers when dropdown is opened
@@ -204,6 +239,12 @@ export function NewVehicleForm() {
   const handleModelDropdownOpen = () => {
     setIsModelDropdownOpen(true)
     loadVehicleModels()
+  }
+
+  // Add a handler for year dropdown open
+  const handleYearDropdownOpen = () => {
+    setIsYearDropdownOpen(true)
+    loadYears()
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -248,7 +289,7 @@ export function NewVehicleForm() {
     }
   }
 
-  if (isLoadingDrivers || isLoadingMakes || isLoadingModels) {
+  if (isLoadingDrivers || isLoadingMakes || isLoadingModels || isLoadingYears) {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="flex flex-col items-center gap-2">
@@ -352,9 +393,31 @@ export function NewVehicleForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Year</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
+                    <Select
+                      onValueChange={(value) => field.onChange(Number.parseInt(value))}
+                      defaultValue={field.value?.toString()}
+                      onOpenChange={handleYearDropdownOpen}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a year" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingYears ? (
+                          <div className="flex items-center justify-center p-2">
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            <span>Loading years...</span>
+                          </div>
+                        ) : (
+                          years.map((year) => (
+                            <SelectItem key={year.name} value={year.name}>
+                              {year.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

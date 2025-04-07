@@ -17,9 +17,11 @@ type Driver = {
   first_name: string
   last_name: string
   email: string
-  phone: string
-  license_number: string
-  license_expiry: string
+  cell_number: string
+  country: string
+  national_id: string
+  start_date: string
+  end_date: string
   status: string
   vehicle?: string
   vehicle_name?: string
@@ -83,8 +85,8 @@ export function DriverTable() {
       driver.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       driver.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       driver.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.phone?.includes(searchTerm) ||
-      driver.license_number?.toLowerCase().includes(searchTerm.toLowerCase())
+      driver.cell_number?.includes(searchTerm) ||
+      driver.national_id?.toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesStatus = statusFilter === "all" ? true : driver.status === statusFilter
 
@@ -95,18 +97,18 @@ export function DriverTable() {
 
   const exportToCSV = () => {
     // Create CSV content
-    const headers = ["Name", "Email", "Phone", "License Number", "License Expiry", "Status", "Assigned Vehicle"]
+    const headers = ["Name", "Email", "Phone", "Country", "National ID", "Start Date", "Status"]
     const csvContent = [
       headers.join(","),
       ...filteredDrivers.map((driver) =>
         [
           `${driver.first_name} ${driver.last_name}`,
           driver.email,
-          driver.phone,
-          driver.license_number,
-          driver.license_expiry,
+          driver.cell_number,
+          driver.country || "N/A",
+          driver.national_id || "N/A",
+          driver.start_date || "N/A",
           driver.status,
-          driver.vehicle_name || "Unassigned",
         ].join(","),
       ),
     ].join("\n")
@@ -187,7 +189,7 @@ export function DriverTable() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Contact</TableHead>
-                <TableHead>License</TableHead>
+                <TableHead>Details</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Assigned Vehicle</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -203,14 +205,14 @@ export function DriverTable() {
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="text-sm">{driver.email}</span>
-                        <span className="text-xs text-gray-500">{driver.phone}</span>
+                        <span className="text-xs text-gray-500">{driver.cell_number}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="text-sm">{driver.license_number}</span>
+                        <span className="text-sm">ID: {driver.national_id || "N/A"}</span>
                         <span className="text-xs text-gray-500">
-                          Expires: {new Date(driver.license_expiry).toLocaleDateString()}
+                          Started: {driver.start_date ? new Date(driver.start_date).toLocaleDateString() : "N/A"}
                         </span>
                       </div>
                     </TableCell>
