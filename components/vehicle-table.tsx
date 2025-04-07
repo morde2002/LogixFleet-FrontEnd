@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PlusCircle, MoreHorizontal, Search, Loader2, Download } from "lucide-react"
+import { PlusCircle, MoreHorizontal, Search, Loader2, Download, RefreshCw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { fetchVehicles } from "@/lib/actions"
@@ -29,44 +29,55 @@ type Vehicle = {
 export function VehicleTable() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [typeFilter, setTypeFilter] = useState("all")
   const router = useRouter()
   const { toast } = useToast()
   const currentUser = useCurrentUser()
 
-  useEffect(() => {
-    const loadVehicles = async () => {
-      try {
+  const loadVehicles = async (showRefreshingState = false) => {
+    try {
+      if (showRefreshingState) {
+        setIsRefreshing(true)
+      } else {
         setIsLoading(true)
-        const result = await fetchVehicles()
+      }
 
-        if (result.error) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: result.error,
-          })
-          return
-        }
+      const result = await fetchVehicles()
 
-        if (result.data) {
-          setVehicles(result.data)
-        }
-      } catch (error) {
-        console.error("Error loading vehicles:", error)
+      if (result.error) {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load vehicles. Please try again.",
+          description: result.error,
         })
-      } finally {
-        setIsLoading(false)
+        return
       }
-    }
 
+      if (result.data) {
+        setVehicles(result.data)
+      }
+    } catch (error) {
+      console.error("Error loading vehicles:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load vehicles. Please try again.",
+      })
+    } finally {
+      setIsLoading(false)
+      setIsRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
     loadVehicles()
   }, [toast])
+
+  const handleRefresh = () => {
+    loadVehicles(true)
+  }
 
   // Get unique vehicle types for filter
   const vehicleTypes = Array.from(new Set(vehicles.map((v) => v.vehicle_type))).filter(Boolean)
@@ -155,6 +166,10 @@ export function VehicleTable() {
               ))}
             </SelectContent>
           </Select>
+
+          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title="Refresh">
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          </Button>
         </div>
 
         <div className="flex space-x-2">

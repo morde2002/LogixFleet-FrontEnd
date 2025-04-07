@@ -45,6 +45,7 @@ export function NewVehicleForm() {
   const [error, setError] = useState<string | null>(null)
   const [drivers, setDrivers] = useState<Driver[]>([])
   const [isLoadingDrivers, setIsLoadingDrivers] = useState(true)
+  const [isDriverDropdownOpen, setIsDriverDropdownOpen] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
@@ -65,38 +66,44 @@ export function NewVehicleForm() {
     },
   })
 
-  useEffect(() => {
-    const loadDrivers = async () => {
-      try {
-        setIsLoadingDrivers(true)
-        const result = await fetchDrivers()
+  const loadDrivers = async () => {
+    try {
+      setIsLoadingDrivers(true)
+      const result = await fetchDrivers()
 
-        if (result.error) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: result.error,
-          })
-          return
-        }
-
-        if (result.data) {
-          setDrivers(result.data)
-        }
-      } catch (error) {
-        console.error("Error loading drivers:", error)
+      if (result.error) {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load drivers. Please try again.",
+          description: result.error,
         })
-      } finally {
-        setIsLoadingDrivers(false)
+        return
       }
-    }
 
+      if (result.data) {
+        setDrivers(result.data)
+      }
+    } catch (error) {
+      console.error("Error loading drivers:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load drivers. Please try again.",
+      })
+    } finally {
+      setIsLoadingDrivers(false)
+    }
+  }
+
+  useEffect(() => {
     loadDrivers()
   }, [toast])
+
+  // Refresh drivers when dropdown is opened
+  const handleDriverDropdownOpen = () => {
+    setIsDriverDropdownOpen(true)
+    loadDrivers()
+  }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -140,7 +147,7 @@ export function NewVehicleForm() {
     }
   }
 
-  if (isLoadingDrivers) {
+  if (isLoadingDrivers && !isDriverDropdownOpen) {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="flex flex-col items-center gap-2">
@@ -352,19 +359,32 @@ export function NewVehicleForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assigned Driver</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      onOpenChange={handleDriverDropdownOpen}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a driver (optional)" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {drivers.map((driver) => (
-                          <SelectItem key={driver.name} value={driver.name}>
-                            {driver.first_name} {driver.last_name}
-                          </SelectItem>
-                        ))}
+                        {isLoadingDrivers && isDriverDropdownOpen ? (
+                          <div className="flex items-center justify-center py-2">
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            <span>Loading drivers...</span>
+                          </div>
+                        ) : (
+                          <>
+                            <SelectItem value="none">None</SelectItem>
+                            {drivers.map((driver) => (
+                              <SelectItem key={driver.name} value={driver.name}>
+                                {driver.first_name} {driver.last_name}
+                              </SelectItem>
+                            ))}
+                          </>
+                        )}
                       </SelectContent>
                     </Select>
                     <FormDescription>Optionally assign a driver to this vehicle.</FormDescription>

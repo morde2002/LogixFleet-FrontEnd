@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PlusCircle, MoreHorizontal, Search, Loader2, Download } from "lucide-react"
+import { PlusCircle, MoreHorizontal, Search, Loader2, Download, RefreshCw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { deleteUser, fetchUsers } from "@/lib/actions"
@@ -26,6 +26,7 @@ type User = {
 export function UserTable() {
   const [users, setUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState("all")
   const [departmentFilter, setDepartmentFilter] = useState("all")
@@ -33,45 +34,54 @@ export function UserTable() {
   const { toast } = useToast()
   const currentUser = useCurrentUser()
 
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
+  const loadUsers = async (showRefreshingState = false) => {
+    try {
+      if (showRefreshingState) {
+        setIsRefreshing(true)
+      } else {
         setIsLoading(true)
-        const result = await fetchUsers()
+      }
 
-        if (result.error) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: result.error,
-          })
-          return
-        }
+      const result = await fetchUsers()
 
-        if (result.data) {
-          // Add mock role for now if not provided by API
-          const usersWithRoles = result.data.map((user: User) => ({
-            ...user,
-            role:
-              user.role ||
-              ["Admin", "FleetManager", "Driver", "Accountant", "Supervisor"][Math.floor(Math.random() * 5)],
-          }))
-          setUsers(usersWithRoles)
-        }
-      } catch (error) {
-        console.error("Error loading users:", error)
+      if (result.error) {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load users. Please try again.",
+          description: result.error,
         })
-      } finally {
-        setIsLoading(false)
+        return
       }
-    }
 
+      if (result.data) {
+        // Add mock role for now if not provided by API
+        const usersWithRoles = result.data.map((user: User) => ({
+          ...user,
+          role:
+            user.role || ["Admin", "FleetManager", "Driver", "Accountant", "Supervisor"][Math.floor(Math.random() * 5)],
+        }))
+        setUsers(usersWithRoles)
+      }
+    } catch (error) {
+      console.error("Error loading users:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load users. Please try again.",
+      })
+    } finally {
+      setIsLoading(false)
+      setIsRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
     loadUsers()
   }, [toast])
+
+  const handleRefresh = () => {
+    loadUsers(true)
+  }
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -195,6 +205,10 @@ export function UserTable() {
               <SelectItem value="Logistics">Logistics</SelectItem>
             </SelectContent>
           </Select>
+
+          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title="Refresh">
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          </Button>
         </div>
 
         <div className="flex space-x-2">

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PlusCircle, MoreHorizontal, Search, Loader2, Download } from "lucide-react"
+import { PlusCircle, MoreHorizontal, Search, Loader2, Download, RefreshCw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { fetchDrivers } from "@/lib/actions"
@@ -28,44 +28,55 @@ type Driver = {
 export function DriverTable() {
   const [drivers, setDrivers] = useState<Driver[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const router = useRouter()
   const { toast } = useToast()
   const currentUser = useCurrentUser()
 
-  useEffect(() => {
-    const loadDrivers = async () => {
-      try {
+  const loadDrivers = async (showRefreshingState = false) => {
+    try {
+      if (showRefreshingState) {
+        setIsRefreshing(true)
+      } else {
         setIsLoading(true)
-        const result = await fetchDrivers()
+      }
 
-        if (result.error) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: result.error,
-          })
-          return
-        }
+      const result = await fetchDrivers()
 
-        if (result.data) {
-          setDrivers(result.data)
-        }
-      } catch (error) {
-        console.error("Error loading drivers:", error)
+      if (result.error) {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load drivers. Please try again.",
+          description: result.error,
         })
-      } finally {
-        setIsLoading(false)
+        return
       }
-    }
 
+      if (result.data) {
+        setDrivers(result.data)
+      }
+    } catch (error) {
+      console.error("Error loading drivers:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load drivers. Please try again.",
+      })
+    } finally {
+      setIsLoading(false)
+      setIsRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
     loadDrivers()
   }, [toast])
+
+  const handleRefresh = () => {
+    loadDrivers(true)
+  }
 
   const filteredDrivers = drivers.filter((driver) => {
     const matchesSearch =
@@ -148,6 +159,10 @@ export function DriverTable() {
               <SelectItem value="On Leave">On Leave</SelectItem>
             </SelectContent>
           </Select>
+
+          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title="Refresh">
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          </Button>
         </div>
 
         <div className="flex space-x-2">
