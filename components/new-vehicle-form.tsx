@@ -247,47 +247,47 @@ export function NewVehicleForm() {
     loadYears()
   }
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      setIsSubmitting(true)
-      setError(null)
+  // async function onSubmit(values: z.infer<typeof formSchema>) {
+  //   try {
+  //     setIsSubmitting(true)
+  //     setError(null)
 
-      if (values.driver === "none") {
-        values.driver = undefined
-      }
+  //     if (values.driver === "none") {
+  //       values.driver = undefined
+  //     }
 
-      console.log("Submitting vehicle data:", values)
-      const result = await createVehicle(values)
+  //     console.log("Submitting vehicle data:", values)
+  //     const result = await createVehicle(values)
 
-      if (result.error) {
-        setError(result.error)
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        })
-        return
-      }
+  //     if (result.error) {
+  //       setError(result.error)
+  //       toast({
+  //         variant: "destructive",
+  //         title: "Error",
+  //         description: result.error,
+  //       })
+  //       return
+  //     }
 
-      toast({
-        title: "Vehicle created successfully",
-        description: "The vehicle has been added to the fleet.",
-      })
+  //     toast({
+  //       title: "Vehicle created successfully",
+  //       description: "The vehicle has been added to the fleet.",
+  //     })
 
-      setIsSuccess(true)
-      form.reset()
-    } catch (error) {
-      console.error("Error creating vehicle:", error)
-      setError("An error occurred while creating the vehicle.")
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "An error occurred while creating the vehicle.",
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  //     setIsSuccess(true)
+  //     form.reset()
+  //   } catch (error) {
+  //     console.error("Error creating vehicle:", error)
+  //     setError("An error occurred while creating the vehicle.")
+  //     toast({
+  //       variant: "destructive",
+  //       title: "Error",
+  //       description: "An error occurred while creating the vehicle.",
+  //     })
+  //   } finally {
+  //     setIsSubmitting(false)
+  //   }
+  // }
 
   if (isLoadingDrivers || isLoadingMakes || isLoadingModels || isLoadingYears) {
     return (
