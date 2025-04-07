@@ -11,6 +11,8 @@ import { PlusCircle, MoreHorizontal, Search, Loader2, Download, RefreshCw } from
 import { useToast } from "@/hooks/use-toast"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { deleteUser, fetchUsers } from "@/lib/actions"
+import { RestrictedButton } from "@/components/restricted-button"
+import { usePermissions } from "@/hooks/use-permissions"
 
 type User = {
   name: string
@@ -33,6 +35,7 @@ export function UserTable() {
   const router = useRouter()
   const { toast } = useToast()
   const currentUser = useCurrentUser()
+  const { hasPermission } = usePermissions()
 
   const loadUsers = async (showRefreshingState = false) => {
     try {
@@ -151,7 +154,9 @@ export function UserTable() {
     document.body.removeChild(link)
   }
 
-  const canCreateUsers = currentUser?.role === "Admin" || currentUser?.role === "FleetManager"
+  const canCreateUsers = hasPermission("User", "create")
+  const canEditUsers = hasPermission("User", "write")
+  const canDeleteUsers = hasPermission("User", "delete")
 
   if (isLoading) {
     return (
@@ -217,12 +222,17 @@ export function UserTable() {
             Export CSV
           </Button>
 
-          {canCreateUsers && (
-            <Button onClick={() => router.push("/dashboard/users/new")} className="bg-blue-600 hover:bg-blue-700">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add New User
-            </Button>
-          )}
+          <RestrictedButton
+            module="User"
+            action="create"
+            onClick={() => router.push("/dashboard/users/new")}
+            className="bg-blue-600 hover:bg-blue-700"
+            fallbackMessage="You don't have permission to create users"
+            showAlert={true}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add New User
+          </RestrictedButton>
         </div>
       </div>
 
@@ -267,12 +277,45 @@ export function UserTable() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.push(`/dashboard/users/edit/${user.name}`)}>
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteUser(user.name)} className="text-red-600">
-                            Delete
-                          </DropdownMenuItem>
+                          {canEditUsers ? (
+                            <DropdownMenuItem onClick={() => router.push(`/dashboard/users/edit/${user.name}`)}>
+                              Edit
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              className="text-orange-500"
+                              onClick={() =>
+                                toast({
+                                  variant: "destructive",
+                                  title: "Access Denied",
+                                  description: "You don't have permission to edit users",
+                                })
+                              }
+                            >
+                              <Lock className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                          )}
+
+                          {canDeleteUsers ? (
+                            <DropdownMenuItem onClick={() => handleDeleteUser(user.name)} className="text-red-600">
+                              Delete
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              className="text-orange-500"
+                              onClick={() =>
+                                toast({
+                                  variant: "destructive",
+                                  title: "Access Denied",
+                                  description: "You don't have permission to delete users",
+                                })
+                              }
+                            >
+                              <Lock className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

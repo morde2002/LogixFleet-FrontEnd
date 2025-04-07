@@ -43,6 +43,7 @@ const DRIVER_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 const YEAR_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Year"
 const YEAR_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 
+// Update the login function to fetch and store user permissions
 export async function login({
   email,
   password,
@@ -90,6 +91,7 @@ export async function login({
         })
 
         const userDetails = await userDetailsResponse.json()
+        console.log("User details:", userDetails)
 
         // Store user information in cookies
         const userData = {
@@ -97,7 +99,8 @@ export async function login({
           name: data.full_name || userDetails.message?.full_name || email.split("@")[0],
           email: email,
           role: userDetails.message?.role || "Admin", // Default to Admin if role not provided
-          permissions: userDetails.message?.permissions || [],
+          roles: userDetails.message?.roles || [],
+          permissions: userDetails.message?.permissions || {},
         }
 
         // Set a cookie with user information
@@ -125,7 +128,7 @@ export async function login({
           name: data.full_name || email.split("@")[0],
           email: email,
           role: "Admin", // Default to Admin if role not provided
-          permissions: [],
+          permissions: {},
         }
 
         cookies().set("user_id", userData.id, {
@@ -163,7 +166,19 @@ export async function login({
       name: email.split("@")[0],
       email: email,
       role: isAdmin ? "Admin" : "Driver",
-      permissions: isAdmin ? ["all_perms"] : [],
+      roles: isAdmin ? ["Admin", "System Manager"] : ["Driver"],
+      permissions: isAdmin
+        ? {
+            User: ["read", "write", "create", "delete"],
+            Vehicle: ["read", "write", "create", "delete"],
+            Driver: ["read", "write", "create", "delete"],
+            Report: ["read", "write", "create"],
+          }
+        : {
+            Vehicle: ["read"],
+            Driver: ["read"],
+            Report: [],
+          },
     }
 
     cookies().set("user_id", userData.id, {

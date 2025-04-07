@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PlusCircle, MoreHorizontal, Search, Loader2, Download, RefreshCw } from "lucide-react"
+import { PlusCircle, MoreHorizontal, Search, Loader2, Download, RefreshCw, Lock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { fetchVehicles } from "@/lib/actions"
+import { RestrictedButton } from "@/components/restricted-button"
+import { usePermissions } from "@/hooks/use-permissions"
 
 type Vehicle = {
   name?: string
@@ -35,6 +37,7 @@ export function VehicleTable() {
   const router = useRouter()
   const { toast } = useToast()
   const currentUser = useCurrentUser()
+  const { hasPermission } = usePermissions()
 
   const loadVehicles = async (showRefreshingState = false) => {
     try {
@@ -94,7 +97,9 @@ export function VehicleTable() {
     return matchesSearch && matchesType
   })
 
-  const canManageVehicles = currentUser?.role === "Admin"
+  const canCreateVehicles = hasPermission("Vehicle", "create")
+  const canEditVehicles = hasPermission("Vehicle", "write")
+  const canViewVehicleDetails = hasPermission("Vehicle", "read")
 
   const exportToCSV = () => {
     // Create CSV content
@@ -178,12 +183,17 @@ export function VehicleTable() {
             Export CSV
           </Button>
 
-          {canManageVehicles && (
-            <Button onClick={() => router.push("/dashboard/vehicles/new")} className="bg-blue-600 hover:bg-blue-700">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Vehicle
-            </Button>
-          )}
+          <RestrictedButton
+            module="Vehicle"
+            action="create"
+            onClick={() => router.push("/dashboard/vehicles/new")}
+            className="bg-blue-600 hover:bg-blue-700"
+            fallbackMessage="You don't have permission to create vehicles"
+            showAlert={true}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Vehicle
+          </RestrictedButton>
         </div>
       </div>
 
@@ -222,10 +232,29 @@ export function VehicleTable() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.push(`/dashboard/vehicles/${vehicle.name || index}`)}>
-                            View Details
-                          </DropdownMenuItem>
-                          {canManageVehicles && (
+                          {canViewVehicleDetails ? (
+                            <DropdownMenuItem
+                              onClick={() => router.push(`/dashboard/vehicles/${vehicle.name || index}`)}
+                            >
+                              View Details
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              className="text-orange-500"
+                              onClick={() =>
+                                toast({
+                                  variant: "destructive",
+                                  title: "Access Denied",
+                                  description: "You don't have permission to view vehicle details",
+                                })
+                              }
+                            >
+                              <Lock className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                          )}
+
+                          {canEditVehicles ? (
                             <>
                               <DropdownMenuItem
                                 onClick={() => router.push(`/dashboard/vehicles/edit/${vehicle.name || index}`)}
@@ -237,6 +266,35 @@ export function VehicleTable() {
                                   router.push(`/dashboard/vehicles/service/new?vehicle=${vehicle.name || index}`)
                                 }
                               >
+                                Schedule Service
+                              </DropdownMenuItem>
+                            </>
+                          ) : (
+                            <>
+                              <DropdownMenuItem
+                                className="text-orange-500"
+                                onClick={() =>
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Access Denied",
+                                    description: "You don't have permission to edit vehicles",
+                                  })
+                                }
+                              >
+                                <Lock className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-orange-500"
+                                onClick={() =>
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Access Denied",
+                                    description: "You don't have permission to schedule service",
+                                  })
+                                }
+                              >
+                                <Lock className="mr-2 h-4 w-4" />
                                 Schedule Service
                               </DropdownMenuItem>
                             </>
