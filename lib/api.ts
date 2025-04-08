@@ -1,7 +1,7 @@
 // API endpoints and tokens
 // User API
 const USERS_API_URL = "https://test.logixfleetapp.com/api/resource/User"
-const USERS_API_TOKEN = "6ff54c38fd72811:45bd9ea31d13bf4"
+const USERS_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 
 // Vehicle API endpoints
 const VEHICLE_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Vehicle"

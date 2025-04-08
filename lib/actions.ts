@@ -13,7 +13,7 @@ const USERS_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/User"
 const USERS_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 
 const USER_DETAILS_API_URL = "https://rjlogistics.logixfleetapp.com/api/method/erpnext.api.get_user_details"
-const USER_DETAILS_API_TOKEN = "13560c2ae837ee8:47a214defca981e"
+const USER_DETAILS_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 
 const CREATE_USER_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/User"
 const CREATE_USER_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
