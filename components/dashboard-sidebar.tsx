@@ -153,17 +153,6 @@ export function DashboardSidebar({ user }: { user: AuthUser }) {
               </SidebarMenuItem>
             )}
 
-            {canAccessGarages && (
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/garages")}>
-                  <Link href="/dashboard/garages">
-                    <Tool className="mr-2 h-5 w-5" />
-                    <span>Garages</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
-
             <Collapsible>
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
@@ -213,28 +202,6 @@ export function DashboardSidebar({ user }: { user: AuthUser }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-
-            {canAccessPurchasing && (
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/purchasing")}>
-                  <Link href="/dashboard/purchasing">
-                    <ShoppingCart className="mr-2 h-5 w-5" />
-                    <span>Purchasing</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
-
-            {canAccessAccounting && (
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/accounting")}>
-                  <Link href="/dashboard/accounting">
-                    <CreditCard className="mr-2 h-5 w-5" />
-                    <span>Accounting</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
 
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/settings")}>
