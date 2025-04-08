@@ -1,24 +1,25 @@
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { usePermissions } from "@/hooks/use-permissions"
-import { AlertCircle, Lock } from "lucide-react"
+import { Lock } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import type { Permission } from "@/contexts/auth-context"
 
 type RestrictedButtonProps = React.ComponentProps<typeof Button> & {
-  module: string
-  action: Permission | Permission[]
+  docType: string
+  permission: Permission | Permission[]
   fallbackMessage?: string
   showAlert?: boolean
 }
 
 export function RestrictedButton({
-  module,
-  action,
+  docType,
+  permission,
   fallbackMessage = "You don't have permission to perform this action",
   showAlert = false,
   children,
@@ -27,8 +28,9 @@ export function RestrictedButton({
   const { hasPermission, hasAnyPermission } = usePermissions()
   const [showErrorAlert, setShowErrorAlert] = useState(false)
 
-  // If the module doesn't exist in the API response, default to no access
-  const hasAccess = Array.isArray(action) ? hasAnyPermission(module, action) : hasPermission(module, action)
+  const hasAccess = Array.isArray(permission)
+    ? hasAnyPermission(docType, permission)
+    : hasPermission(docType, permission)
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!hasAccess) {
@@ -44,7 +46,7 @@ export function RestrictedButton({
     props.onClick?.(e)
   }
 
-  // If user has access, render a normal button with the original props
+  // If user has access, render a normal button
   if (hasAccess) {
     return <Button {...props}>{children}</Button>
   }
@@ -77,7 +79,6 @@ export function RestrictedButton({
           variant="destructive"
           className="fixed bottom-4 right-4 w-96 z-50 animate-in fade-in slide-in-from-bottom-5"
         >
-          <AlertCircle className="h-4 w-4" />
           <AlertTitle>Access Denied</AlertTitle>
           <AlertDescription>{fallbackMessage}</AlertDescription>
         </Alert>

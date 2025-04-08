@@ -1,7 +1,17 @@
 import type React from "react"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from "@/contexts/auth-context"
-import "./globals.css"
+
+const inter = Inter({ subsets: ["latin"] })
+
+export const metadata: Metadata = {
+  title: "LogixFleet ERP",
+  description: "Fleet Management ERP System",
+    generator: 'v0.dev'
+}
 
 export default function RootLayout({
   children,
@@ -10,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className={inter.className}>
         <AuthProvider>
           {children}
           <Toaster />
@@ -22,7 +32,3 @@ export default function RootLayout({
 
 
 import './globals.css'
-
-export const metadata = {
-      generator: 'v0.dev'
-    };

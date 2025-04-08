@@ -5,14 +5,17 @@ import Link from "next/link"
 import {
   LogOut,
   Home,
-  Users,
   Car,
   User,
   FileText,
-  Shield,
+  Settings,
   PenToolIcon as Tool,
   Calendar,
   ChevronDown,
+  ShoppingCart,
+  CreditCard,
+  Wrench,
+  Menu,
 } from "lucide-react"
 import {
   Sidebar,
@@ -22,32 +25,28 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
+  SidebarRail,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { logout } from "@/lib/actions"
+import { useAuth, type User } from "@/contexts/auth-context"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { usePermissions } from "@/hooks/use-permissions"
 
-type SidebarUser = {
-  id: string
-  name: string
-  email: string
-  role: string
-  permissions?: string[]
-}
-
-export default function DashboardSidebar({ user }: { user: SidebarUser }) {
+export function DashboardSidebar({ user }: { user: User }) {
   const pathname = usePathname()
+  const { logout } = useAuth()
+  const { canRead, hasModule } = usePermissions()
 
-  // Define which routes are accessible based on user role
-  // Ensure these specific users always have admin access
-  const isSpecialAdmin =
-    user.email?.toLowerCase() === "yesnow@example.com" || user.email?.toLowerCase() === "leofleet@gmail.com"
-  const canAccessUsers = isSpecialAdmin || user.role === "Admin" || user.role === "FleetManager"
-  const canManageVehicles = isSpecialAdmin || user.role === "Admin" || user.role === "FleetManager"
-  const canAccessVehicles = isSpecialAdmin || user.role === "Admin" || user.role === "FleetManager"
-  const canAccessDrivers = true // All users can view drivers
-  const canManageDrivers = isSpecialAdmin || user.role === "Admin" || user.role === "FleetManager"
+  // Check permissions for different modules
+  const canAccessVehicles = canRead("Vehicle")
+  const canAccessDrivers = canRead("Driver")
+  const canAccessMechanics = canRead("Mechanic")
+  const canAccessGarages = canRead("Garage")
+  const canAccessVehicleServices = canRead("Vehicle Service")
+  const canAccessVehicleInspections = canRead("Vehicle Inspection")
+  const canAccessInsurance = canRead("Insurance")
+  const canAccessPurchasing = hasModule("Buying")
+  const canAccessAccounting = hasModule("Accounts")
 
   return (
     <>
@@ -63,21 +62,10 @@ export default function DashboardSidebar({ user }: { user: SidebarUser }) {
               <SidebarMenuButton asChild isActive={pathname === "/dashboard"}>
                 <Link href="/dashboard">
                   <Home className="mr-2 h-5 w-5" />
-                  <span>Home</span>
+                  <span>Dashboard</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-
-            {canAccessUsers && (
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/users")}>
-                  <Link href="/dashboard/users">
-                    <Users className="mr-2 h-5 w-5" />
-                    <span>Users</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
 
             {canAccessVehicles && (
               <Collapsible>
@@ -99,27 +87,33 @@ export default function DashboardSidebar({ user }: { user: SidebarUser }) {
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild isActive={pathname === "/dashboard/vehicles/inspections"}>
-                        <Link href="/dashboard/vehicles/inspections">
-                          <span>Inspections</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild isActive={pathname === "/dashboard/vehicles/insurance"}>
-                        <Link href="/dashboard/vehicles/insurance">
-                          <span>Insurance</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild isActive={pathname === "/dashboard/vehicles/service"}>
-                        <Link href="/dashboard/vehicles/service">
-                          <span>Service</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    {canAccessVehicleInspections && (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={pathname === "/dashboard/vehicles/inspections"}>
+                          <Link href="/dashboard/vehicles/inspections">
+                            <span>Inspections</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )}
+                    {canAccessInsurance && (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={pathname === "/dashboard/vehicles/insurance"}>
+                          <Link href="/dashboard/vehicles/insurance">
+                            <span>Insurance</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )}
+                    {canAccessVehicleServices && (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={pathname === "/dashboard/vehicles/service"}>
+                          <Link href="/dashboard/vehicles/service">
+                            <span>Service</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )}
                   </SidebarMenu>
                 </CollapsibleContent>
               </Collapsible>
@@ -131,6 +125,28 @@ export default function DashboardSidebar({ user }: { user: SidebarUser }) {
                   <Link href="/dashboard/drivers">
                     <User className="mr-2 h-5 w-5" />
                     <span>Drivers</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+
+            {canAccessMechanics && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/mechanics")}>
+                  <Link href="/dashboard/mechanics">
+                    <Wrench className="mr-2 h-5 w-5" />
+                    <span>Mechanics</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+
+            {canAccessGarages && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/garages")}>
+                  <Link href="/dashboard/garages">
+                    <Tool className="mr-2 h-5 w-5" />
+                    <span>Garages</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -166,14 +182,16 @@ export default function DashboardSidebar({ user }: { user: SidebarUser }) {
               </CollapsibleContent>
             </Collapsible>
 
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/maintenance")}>
-                <Link href="/dashboard/maintenance">
-                  <Tool className="mr-2 h-5 w-5" />
-                  <span>Maintenance</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {canAccessVehicleServices && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/maintenance")}>
+                  <Link href="/dashboard/maintenance">
+                    <Tool className="mr-2 h-5 w-5" />
+                    <span>Maintenance</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
 
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/schedule")}>
@@ -184,46 +202,68 @@ export default function DashboardSidebar({ user }: { user: SidebarUser }) {
               </SidebarMenuButton>
             </SidebarMenuItem>
 
-            {user.role === "Admin" && (
+            {canAccessPurchasing && (
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/settings")}>
-                  <Link href="/dashboard/settings">
-                    <Shield className="mr-2 h-5 w-5" />
-                    <span>Settings</span>
+                <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/purchasing")}>
+                  <Link href="/dashboard/purchasing">
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    <span>Purchasing</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
+
+            {canAccessAccounting && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/accounting")}>
+                  <Link href="/dashboard/accounting">
+                    <CreditCard className="mr-2 h-5 w-5" />
+                    <span>Accounting</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/settings")}>
+                <Link href="/dashboard/settings">
+                  <Settings className="mr-2 h-5 w-5" />
+                  <span>Settings</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className="p-4 border-t border-gray-200">
           <div className="flex flex-col space-y-4">
             <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-bold mr-2">
-                {user.name.charAt(0)}
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold mr-2">
+                {user.name?.charAt(0) || user.email.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user.name}</p>
-                <p className="text-xs text-gray-500 truncate">{user.role}</p>
+                <p className="text-sm font-medium truncate">{user.name || user.email}</p>
+                <p className="text-xs text-gray-500 truncate">{user.roles[0] || "User"}</p>
               </div>
             </div>
-            <form action={logout}>
-              <Button
-                type="submit"
-                variant="outline"
-                className="w-full flex items-center justify-center text-red-600 border-red-200 hover:bg-red-50"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign out
-              </Button>
-            </form>
+            <Button
+              onClick={() => logout()}
+              variant="outline"
+              className="w-full flex items-center justify-center text-red-600 border-red-200 hover:bg-red-50"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign out
+            </Button>
           </div>
         </SidebarFooter>
+        <SidebarRail />
       </Sidebar>
 
       {/* Mobile trigger */}
       <div className="fixed top-4 left-4 z-40 md:hidden">
-        <SidebarTrigger className="bg-white shadow-md rounded-md" />
+        <Button className="bg-white shadow-md rounded-md" variant="outline" size="icon">
+          <span className="sr-only">Open sidebar</span>
+          <Menu className="h-5 w-5" />
+        </Button>
       </div>
     </>
   )

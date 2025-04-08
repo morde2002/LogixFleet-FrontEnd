@@ -1,361 +1,261 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect, useState, useRef } from "react"
-import { useRouter, usePathname } from "next/navigation"
+
+import { createContext, useContext, useEffect, useState, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 
-// Type definitions
+// Types based on the API response
 export type Permission = "read" | "write" | "create" | "delete" | "submit" | "cancel" | "amend"
 
-export type UserPermissions = {
-  [module: string]: Permission[]
+export type ModulePermissions = {
+  [docType: string]: Permission[]
 }
 
 export type User = {
-  id: string
-  name: string
   email: string
-  role: string
-  roles?: string[]
-  permissions: UserPermissions
+  name?: string
+  roles: string[]
+  modules: string[]
+  permissions: ModulePermissions
 }
 
 type AuthContextType = {
   user: User | null
   isLoading: boolean
-  hasPermission: (module: string, permission: Permission) => boolean
-  hasAnyPermission: (module: string, permissions: Permission[]) => boolean
+  isAuthenticated: boolean
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
+  hasPermission: (docType: string, permission: Permission) => boolean
+  hasAnyPermission: (docType: string, permissions: Permission[]) => boolean
+  hasRole: (role: string) => boolean
+  hasModule: (module: string) => boolean
   refreshUserData: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// API endpoints
+const LOGIN_API_URL = "https://rjlogistics.logixfleetapp.com/api/method/login"
+const USER_DETAILS_API_URL = "https://rjlogistics.logixfleetapp.com/api/method/erpnext.api.get_user_details"
+const API_TOKEN = "13560c2ae837ee8:47a214defca981e"
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  const pathname = usePathname()
-  const redirectInProgress = useRef(false)
-  const lastRedirectTime = useRef(0)
 
-  // Helper function to check permissions
-  const hasPermission = (module: string, permission: Permission): boolean => {
-    if (!user) return false
+  // Check if user has a specific permission for a document type
+  const hasPermission = useCallback(
+    (docType: string, permission: Permission): boolean => {
+      if (!user) return false
 
-    // Special case for specific admin emails
-    if (user.email?.toLowerCase() === "leofleet@gmail.com" || user.email?.toLowerCase() === "yesnow@example.com") {
-      return true
-    }
+      // Check if the document type exists in permissions
+      if (!user.permissions[docType]) return false
 
-    // Admin role has all permissions
-    if (user.role === "Admin" || (user.roles && user.roles.includes("Admin"))) {
-      return true
-    }
+      // Check if the permission exists for the document type
+      return user.permissions[docType].includes(permission)
+    },
+    [user],
+  )
 
-    // Check if user has the specific permission for the module
-    return Boolean(user.permissions && user.permissions[module] && user.permissions[module].includes(permission))
-  }
+  // Check if user has any of the specified permissions for a document type
+  const hasAnyPermission = useCallback(
+    (docType: string, permissions: Permission[]): boolean => {
+      if (!user) return false
 
-  // Helper to check if user has any of the given permissions
-  const hasAnyPermission = (module: string, permissions: Permission[]): boolean => {
-    // Special case for specific admin emails
-    if (user?.email?.toLowerCase() === "leofleet@gmail.com" || user?.email?.toLowerCase() === "yesnow@example.com") {
-      return true
-    }
+      // Check if the document type exists in permissions
+      if (!user.permissions[docType]) return false
 
-    return permissions.some((permission) => hasPermission(module, permission))
-  }
+      // Check if any of the permissions exist for the document type
+      return permissions.some((permission) => user.permissions[docType].includes(permission))
+    },
+    [user],
+  )
 
-  // Fetch user data from cookies/API
-  const loadUserData = async () => {
-    setIsLoading(true)
+  // Check if user has a specific role
+  const hasRole = useCallback(
+    (role: string): boolean => {
+      if (!user) return false
+      return user.roles.includes(role)
+    },
+    [user],
+  )
+
+  // Check if user has access to a specific module
+  const hasModule = useCallback(
+    (module: string): boolean => {
+      if (!user) return false
+      return user.modules.includes(module)
+    },
+    [user],
+  )
+
+  // Login function
+  const login = async (email: string, password: string) => {
     try {
-      // Try to get user data from cookies
-      const userId = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("user_id="))
-        ?.split("=")[1]
+      setIsLoading(true)
 
-      if (!userId) {
-        setUser(null)
-        setIsLoading(false)
+      // Call login API
+      const loginResponse = await fetch(LOGIN_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `token ${API_TOKEN}`,
+        },
+        body: JSON.stringify({
+          usr: email,
+          pwd: password,
+        }),
+      })
 
-        // If on a protected route, redirect to login
-        if (pathname !== "/" && !pathname.includes("/login")) {
-          // Prevent redirect loops
-          if (!redirectInProgress.current && Date.now() - lastRedirectTime.current > 2000) {
-            redirectInProgress.current = true
-            lastRedirectTime.current = Date.now()
-            router.push("/")
-            setTimeout(() => {
-              redirectInProgress.current = false
-            }, 2000)
-          }
-        }
-        return
-      }
+      const loginData = await loginResponse.json()
 
-      // Try to get user data from cookie
-      const userDataCookie = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("user_data="))
-        ?.split("=")[1]
-
-      let userData = null
-
-      if (userDataCookie) {
-        try {
-          userData = JSON.parse(decodeURIComponent(userDataCookie))
-
-          // Special handling for admin emails
-          if (
-            userData.email?.toLowerCase() === "leofleet@gmail.com" ||
-            userData.email?.toLowerCase() === "yesnow@example.com"
-          ) {
-            userData.role = "Admin"
-            userData.roles = ["Admin", "System Manager"]
-            userData.permissions = {
-              User: ["read", "write", "create", "delete"],
-              Vehicle: ["read", "write", "create", "delete"],
-              Driver: ["read", "write", "create", "delete"],
-              Report: ["read", "write", "create"],
-            }
-          }
-
-          // Set user immediately from cookie data to avoid blank screens
-          setUser(userData)
-        } catch (e) {
-          console.error("Error parsing user data from cookie:", e)
+      if (!loginResponse.ok) {
+        return {
+          success: false,
+          error: loginData.message || "Invalid credentials",
         }
       }
 
-      // Try to refresh from API, but don't block the UI
-      try {
-        const response = await fetch("/api/me", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        })
+      // If login successful, fetch user details
+      const userDetailsResponse = await fetch(`${USER_DETAILS_API_URL}?email=${encodeURIComponent(email)}`, {
+        method: "GET",
+        headers: {
+          Authorization: `token ${API_TOKEN}`,
+        },
+      })
 
-        if (response.ok) {
-          const freshUserData = await response.json()
-
-          // Special handling for admin emails
-          if (
-            freshUserData.email?.toLowerCase() === "leofleet@gmail.com" ||
-            freshUserData.email?.toLowerCase() === "yesnow@example.com"
-          ) {
-            freshUserData.role = "Admin"
-            freshUserData.roles = ["Admin", "System Manager"]
-            freshUserData.permissions = {
-              User: ["read", "write", "create", "delete"],
-              Vehicle: ["read", "write", "create", "delete"],
-              Driver: ["read", "write", "create", "delete"],
-              Report: ["read", "write", "create"],
-            }
-          }
-
-          setUser(freshUserData)
-        } else {
-          console.warn("API /me returned non-OK status:", response.status)
-          // If we already set user from cookie, keep that data
-          if (!userData) {
-            // Fallback to mock data if both cookie and API fail
-            const mockUserData = createMockUserData(userId)
-            setUser(mockUserData)
-          }
-        }
-      } catch (apiError) {
-        console.error("Error fetching from /api/me:", apiError)
-        // If we already set user from cookie, keep that data
-        if (!userData) {
-          // Fallback to mock data if both cookie and API fail
-          const mockUserData = createMockUserData(userId)
-          setUser(mockUserData)
+      if (!userDetailsResponse.ok) {
+        return {
+          success: false,
+          error: "Failed to fetch user details",
         }
       }
+
+      const userDetailsData = await userDetailsResponse.json()
+
+      // Create user object from API response
+      const userData: User = {
+        email: email,
+        name: userDetailsData.message?.full_name || email.split("@")[0],
+        roles: userDetailsData.message?.roles || [],
+        modules: userDetailsData.message?.modules || [],
+        permissions: userDetailsData.message?.permissions || {},
+      }
+
+      // Store user data in localStorage
+      localStorage.setItem("user", JSON.stringify(userData))
+
+      setUser(userData)
+      return { success: true }
     } catch (error) {
-      console.error("Error in loadUserData:", error)
-      setUser(null)
+      console.error("Login error:", error)
+      return {
+        success: false,
+        error: "An unexpected error occurred",
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Refresh user data from the server
+  // Logout function
+  const logout = async () => {
+    localStorage.removeItem("user")
+    setUser(null)
+    router.push("/login")
+  }
+
+  // Refresh user data
   const refreshUserData = async () => {
+    if (!user) return
+
     try {
-      const response = await fetch("/api/me", {
+      setIsLoading(true)
+
+      const userDetailsResponse = await fetch(`${USER_DETAILS_API_URL}?email=${encodeURIComponent(user.email)}`, {
         method: "GET",
         headers: {
-          "Content-Type": "application/json",
+          Authorization: `token ${API_TOKEN}`,
         },
       })
 
-      if (!response.ok) {
-        throw new Error("Failed to refresh user data")
+      if (!userDetailsResponse.ok) {
+        toast({
+          title: "Error",
+          description: "Failed to refresh user data",
+          variant: "destructive",
+        })
+        return
       }
 
-      const userData = await response.json()
+      const userDetailsData = await userDetailsResponse.json()
 
-      // Special handling for admin emails
-      if (
-        userData.email?.toLowerCase() === "leofleet@gmail.com" ||
-        userData.email?.toLowerCase() === "yesnow@example.com"
-      ) {
-        userData.role = "Admin"
-        userData.roles = ["Admin", "System Manager"]
-        userData.permissions = {
-          User: ["read", "write", "create", "delete"],
-          Vehicle: ["read", "write", "create", "delete"],
-          Driver: ["read", "write", "create", "delete"],
-          Report: ["read", "write", "create"],
-        }
+      // Update user object from API response
+      const userData: User = {
+        ...user,
+        roles: userDetailsData.message?.roles || user.roles,
+        modules: userDetailsData.message?.modules || user.modules,
+        permissions: userDetailsData.message?.permissions || user.permissions,
       }
+
+      // Update localStorage
+      localStorage.setItem("user", JSON.stringify(userData))
 
       setUser(userData)
     } catch (error) {
       console.error("Error refreshing user data:", error)
       toast({
-        variant: "destructive",
         title: "Error",
         description: "Failed to refresh user data",
+        variant: "destructive",
       })
-    }
-  }
-
-  // Logout function
-  const logout = async () => {
-    try {
-      await fetch("/api/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-    } catch (error) {
-      console.error("Error during logout:", error)
     } finally {
-      // Clear user data regardless of API success
-      setUser(null)
-
-      // Delete cookies
-      document.cookie = "user_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
-      document.cookie = "user_data=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
-
-      // Redirect to login
-      if (!redirectInProgress.current) {
-        redirectInProgress.current = true
-        router.push("/")
-        setTimeout(() => {
-          redirectInProgress.current = false
-        }, 2000)
-      }
+      setIsLoading(false)
     }
   }
 
-  // Load user data on mount
+  // Load user data from localStorage on mount
   useEffect(() => {
-    loadUserData()
+    const loadUserFromStorage = () => {
+      const storedUser = localStorage.getItem("user")
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser)
+          setUser(userData)
+        } catch (error) {
+          console.error("Error parsing user data:", error)
+          localStorage.removeItem("user")
+        }
+      }
+      setIsLoading(false)
+    }
+
+    loadUserFromStorage()
   }, [])
-
-  // Protect routes based on permissions
-  useEffect(() => {
-    if (isLoading) return
-
-    // Skip permission checks for special admin emails
-    if (user?.email?.toLowerCase() === "leofleet@gmail.com" || user?.email?.toLowerCase() === "yesnow@example.com") {
-      return
-    }
-
-    // Handle route protection
-    const routePermissions: Record<string, { module: string; permissions: Permission[] }> = {
-      "/dashboard/users": { module: "User", permissions: ["read"] },
-      "/dashboard/users/new": { module: "User", permissions: ["create"] },
-      "/dashboard/vehicles": { module: "Vehicle", permissions: ["read"] },
-      "/dashboard/vehicles/new": { module: "Vehicle", permissions: ["create"] },
-      "/dashboard/drivers": { module: "Driver", permissions: ["read"] },
-      "/dashboard/drivers/new": { module: "Driver", permissions: ["create"] },
-      // Add more routes as needed
-    }
-
-    // Check for exact routes and route patterns
-    const needsRedirect = Object.entries(routePermissions).some(([route, { module, permissions }]) => {
-      if (pathname === route) {
-        return !hasAnyPermission(module, permissions)
-      }
-
-      // Handle edit routes
-      if (route.endsWith("/new") && pathname.includes("/edit/") && pathname.startsWith(route.replace("/new", ""))) {
-        return !hasPermission(module, "write")
-      }
-
-      return false
-    })
-
-    if (user && needsRedirect) {
-      // Prevent redirect loops
-      if (!redirectInProgress.current && Date.now() - lastRedirectTime.current > 2000) {
-        toast({
-          variant: "destructive",
-          title: "Access Denied",
-          description: "You don't have permission to access this page",
-        })
-        redirectInProgress.current = true
-        lastRedirectTime.current = Date.now()
-        router.push("/dashboard")
-        setTimeout(() => {
-          redirectInProgress.current = false
-        }, 2000)
-      }
-    }
-  }, [isLoading, pathname, user, router])
 
   const value = {
     user,
     isLoading,
+    isAuthenticated: !!user,
+    login,
+    logout,
     hasPermission,
     hasAnyPermission,
-    logout,
+    hasRole,
+    hasModule,
     refreshUserData,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-// Add this helper function to create mock user data when needed
-const createMockUserData = (userId: string) => {
-  // Create mock user data based on special IDs or default to basic permissions
-  const isAdmin = userId === "1" || userId === "admin"
-
-  return {
-    id: userId,
-    name: isAdmin ? "Admin User" : "Regular User",
-    email: isAdmin ? "admin@example.com" : "user@example.com",
-    role: isAdmin ? "Admin" : "User",
-    roles: isAdmin ? ["Admin", "System Manager"] : ["User"],
-    permissions: isAdmin
-      ? {
-          User: ["read", "write", "create", "delete"],
-          Vehicle: ["read", "write", "create", "delete"],
-          Driver: ["read", "write", "create", "delete"],
-          Report: ["read", "write", "create"],
-        }
-      : {
-          Vehicle: ["read"],
-          Driver: ["read"],
-          Report: ["read"],
-        },
-  }
-}
-
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error("useAuthe must be used within an AutheProvider")
+    throw new Error("useAuth must be used within an AuthProvider")
   }
   return context
 }

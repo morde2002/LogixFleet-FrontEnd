@@ -3,47 +3,41 @@
 import { useAuth, type Permission } from "@/contexts/auth-context"
 
 export function usePermissions() {
-  const auth = useAuth()
-
-  // If auth context is not available or still loading, provide safe defaults
-  if (!auth || auth.isLoading) {
-    return {
-      hasPermission: () => false,
-      hasAnyPermission: () => false,
-      canCreate: () => false,
-      canRead: () => false,
-      canWrite: () => false,
-      canDelete: () => false,
-      canEdit: () => false,
-      canManage: () => false,
-      canSubmit: () => false,
-      canCancel: () => false,
-      canAmend: () => false,
-      getAllModules: () => [],
-      getModulePermissions: () => [],
-    }
-  }
-
-  const { hasPermission, hasAnyPermission, user } = auth
+  const { hasPermission, hasAnyPermission, hasRole, hasModule, user } = useAuth()
 
   return {
+    // Document type permission checks
     hasPermission,
     hasAnyPermission,
-    // Commonly used permission check combinations
-    canCreate: (module: string) => hasPermission(module, "create"),
-    canRead: (module: string) => hasPermission(module, "read"),
-    canWrite: (module: string) => hasPermission(module, "write"),
-    canDelete: (module: string) => hasPermission(module, "delete"),
-    canEdit: (module: string) => hasPermission(module, "write"),
-    canManage: (module: string) => hasAnyPermission(module, ["create", "write", "delete"]),
-    canSubmit: (module: string) => hasPermission(module, "submit"),
-    canCancel: (module: string) => hasPermission(module, "cancel"),
-    canAmend: (module: string) => hasPermission(module, "amend"),
 
-    // Get all the modules the user has access to
-    getAllModules: () => (user ? Object.keys(user.permissions || {}) : []),
+    // Role checks
+    hasRole,
 
-    // Get all permissions for a specific module
-    getModulePermissions: (module: string): Permission[] => user?.permissions?.[module] || [],
+    // Module checks
+    hasModule,
+
+    // Common permission checks
+    canRead: (docType: string) => hasPermission(docType, "read"),
+    canWrite: (docType: string) => hasPermission(docType, "write"),
+    canCreate: (docType: string) => hasPermission(docType, "create"),
+    canDelete: (docType: string) => hasPermission(docType, "delete"),
+    canSubmit: (docType: string) => hasPermission(docType, "submit"),
+    canCancel: (docType: string) => hasPermission(docType, "cancel"),
+    canAmend: (docType: string) => hasPermission(docType, "amend"),
+
+    // Check if user can manage (create, write, or delete)
+    canManage: (docType: string) => hasAnyPermission(docType, ["create", "write", "delete"]),
+
+    // Get all document types the user has access to
+    getAllDocTypes: () => (user ? Object.keys(user.permissions) : []),
+
+    // Get all permissions for a specific document type
+    getDocTypePermissions: (docType: string): Permission[] => user?.permissions[docType] || [],
+
+    // Get all modules the user has access to
+    getAllModules: () => user?.modules || [],
+
+    // Get all roles the user has
+    getAllRoles: () => user?.roles || [],
   }
 }

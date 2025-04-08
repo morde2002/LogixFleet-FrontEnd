@@ -312,6 +312,11 @@ const SidebarMenuButton = React.forwardRef<
 })
 SidebarMenuButton.displayName = "SidebarMenuButton"
 
+const SidebarRail = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(({ className, ...props }, ref) => {
+  return <div ref={ref} className={cn("hidden md:block", className)} {...props} />
+})
+SidebarRail.displayName = "SidebarRail"
+
 export {
   Sidebar,
   SidebarContent,
@@ -323,4 +328,5 @@ export {
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
+  SidebarRail,
 }
