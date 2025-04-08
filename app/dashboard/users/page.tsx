@@ -33,8 +33,9 @@ export default function UsersPage() {
       }
 
       const response = await fetchUsers()
+      console.log("Users API response:", response)
 
-      if (response.data) {
+      if (response && response.data) {
         setUsers(response.data)
       } else {
         toast({

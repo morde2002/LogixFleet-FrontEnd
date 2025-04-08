@@ -33,8 +33,9 @@ export default function VehiclesPage() {
       }
 
       const response = await fetchVehicles()
+      console.log("Vehicles API response:", response)
 
-      if (response.data) {
+      if (response && response.data) {
         setVehicles(response.data)
       } else {
         toast({

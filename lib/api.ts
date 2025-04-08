@@ -1,9 +1,19 @@
 // API endpoints and tokens
+// User API
+const USERS_API_URL = "https://test.logixfleetapp.com/api/resource/User"
+const USERS_API_TOKEN = "6ff54c38fd72811:45bd9ea31d13bf4"
+
+// Vehicle API endpoints
+const VEHICLE_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Vehicle"
+const VEHICLE_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
+
+// Driver API endpoints
+const DRIVER_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Driver"
+const DRIVER_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
+
+// Other API endpoints and tokens
 const LOGIN_API_URL = "https://rjlogistics.logixfleetapp.com/api/method/login"
 const LOGIN_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
-
-const USERS_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/User"
-const USERS_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 
 const USER_DETAILS_API_URL = "https://rjlogistics.logixfleetapp.com/api/method/erpnext.api.get_user_details"
 const USER_DETAILS_API_TOKEN = "13560c2ae837ee8:47a214defca981e"
@@ -17,20 +27,12 @@ const ROLE_PROFILE_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 const DEPARTMENT_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Department"
 const DEPARTMENT_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 
-// Vehicle API endpoints
-const VEHICLE_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Vehicle"
-const VEHICLE_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
-
 // Vehicle Make and Model API endpoints
 const VEHICLE_MAKE_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Vehicle Make"
 const VEHICLE_MAKE_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 
 const VEHICLE_MODEL_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Vehicle Model"
 const VEHICLE_MODEL_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
-
-// Driver API endpoints
-const DRIVER_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Driver"
-const DRIVER_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 
 // Year API endpoint
 const YEAR_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Year"
@@ -77,6 +79,7 @@ export async function getUserDetails(email: string) {
 // User API
 export async function fetchUsers() {
   try {
+    console.log("Fetching users from:", USERS_API_URL)
     const response = await fetch(
       `${USERS_API_URL}?fields=["name","first_name","last_name","email","full_name","enabled","role_profile","department"]`,
       {
@@ -84,10 +87,20 @@ export async function fetchUsers() {
         headers: {
           Authorization: `token ${USERS_API_TOKEN}`,
         },
+        cache: "no-store",
       },
     )
 
-    return await response.json()
+    if (!response.ok) {
+      console.error("Failed to fetch users:", response.status, response.statusText)
+      const errorText = await response.text()
+      console.error("Error response:", errorText)
+      throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log("Users data:", data)
+    return data
   } catch (error) {
     console.error("Error fetching users:", error)
     throw error
@@ -101,7 +114,12 @@ export async function fetchUserById(userId: string) {
       headers: {
         Authorization: `token ${USERS_API_TOKEN}`,
       },
+      cache: "no-store",
     })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch user details: ${response.status} ${response.statusText}`)
+    }
 
     return await response.json()
   } catch (error) {
@@ -123,6 +141,10 @@ export async function createUser(userData: any) {
       }),
     })
 
+    if (!response.ok) {
+      throw new Error(`Failed to create user: ${response.status} ${response.statusText}`)
+    }
+
     return await response.json()
   } catch (error) {
     console.error("Error creating user:", error)
@@ -143,6 +165,10 @@ export async function updateUser(userId: string, userData: any) {
       }),
     })
 
+    if (!response.ok) {
+      throw new Error(`Failed to update user: ${response.status} ${response.statusText}`)
+    }
+
     return await response.json()
   } catch (error) {
     console.error("Error updating user:", error)
@@ -159,6 +185,10 @@ export async function deleteUser(userId: string) {
       },
     })
 
+    if (!response.ok) {
+      throw new Error(`Failed to delete user: ${response.status} ${response.statusText}`)
+    }
+
     return await response.json()
   } catch (error) {
     console.error("Error deleting user:", error)
@@ -174,7 +204,12 @@ export async function fetchRoleProfiles() {
       headers: {
         Authorization: `token ${ROLE_PROFILE_API_TOKEN}`,
       },
+      cache: "no-store",
     })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch role profiles: ${response.status} ${response.statusText}`)
+    }
 
     return await response.json()
   } catch (error) {
@@ -190,7 +225,12 @@ export async function fetchDepartments() {
       headers: {
         Authorization: `token ${DEPARTMENT_API_TOKEN}`,
       },
+      cache: "no-store",
     })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch departments: ${response.status} ${response.statusText}`)
+    }
 
     return await response.json()
   } catch (error) {
@@ -202,6 +242,7 @@ export async function fetchDepartments() {
 // Vehicle API
 export async function fetchVehicles() {
   try {
+    console.log("Fetching vehicles from:", VEHICLE_API_URL)
     const response = await fetch(
       `${VEHICLE_API_URL}?fields=["name","license_plate","make","model","vehicle_type","driver","year","fuel_type","color","doors","wheels","status"]`,
       {
@@ -209,10 +250,20 @@ export async function fetchVehicles() {
         headers: {
           Authorization: `token ${VEHICLE_API_TOKEN}`,
         },
+        cache: "no-store",
       },
     )
 
-    return await response.json()
+    if (!response.ok) {
+      console.error("Failed to fetch vehicles:", response.status, response.statusText)
+      const errorText = await response.text()
+      console.error("Error response:", errorText)
+      throw new Error(`Failed to fetch vehicles: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log("Vehicles data:", data)
+    return data
   } catch (error) {
     console.error("Error fetching vehicles:", error)
     throw error
@@ -226,7 +277,12 @@ export async function fetchVehicleById(vehicleId: string) {
       headers: {
         Authorization: `token ${VEHICLE_API_TOKEN}`,
       },
+      cache: "no-store",
     })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch vehicle details: ${response.status} ${response.statusText}`)
+    }
 
     return await response.json()
   } catch (error) {
@@ -248,6 +304,10 @@ export async function createVehicle(vehicleData: any) {
       }),
     })
 
+    if (!response.ok) {
+      throw new Error(`Failed to create vehicle: ${response.status} ${response.statusText}`)
+    }
+
     return await response.json()
   } catch (error) {
     console.error("Error creating vehicle:", error)
@@ -268,6 +328,10 @@ export async function updateVehicle(vehicleId: string, vehicleData: any) {
       }),
     })
 
+    if (!response.ok) {
+      throw new Error(`Failed to update vehicle: ${response.status} ${response.statusText}`)
+    }
+
     return await response.json()
   } catch (error) {
     console.error("Error updating vehicle:", error)
@@ -284,6 +348,10 @@ export async function deleteVehicle(vehicleId: string) {
       },
     })
 
+    if (!response.ok) {
+      throw new Error(`Failed to delete vehicle: ${response.status} ${response.statusText}`)
+    }
+
     return await response.json()
   } catch (error) {
     console.error("Error deleting vehicle:", error)
@@ -299,7 +367,12 @@ export async function fetchVehicleMakes() {
       headers: {
         Authorization: `token ${VEHICLE_MAKE_API_TOKEN}`,
       },
+      cache: "no-store",
     })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch vehicle makes: ${response.status} ${response.statusText}`)
+    }
 
     return await response.json()
   } catch (error) {
@@ -315,7 +388,12 @@ export async function fetchVehicleModels() {
       headers: {
         Authorization: `token ${VEHICLE_MODEL_API_TOKEN}`,
       },
+      cache: "no-store",
     })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch vehicle models: ${response.status} ${response.statusText}`)
+    }
 
     return await response.json()
   } catch (error) {
@@ -327,6 +405,7 @@ export async function fetchVehicleModels() {
 // Driver API
 export async function fetchDrivers() {
   try {
+    console.log("Fetching drivers from:", DRIVER_API_URL)
     const response = await fetch(
       `${DRIVER_API_URL}?fields=["name","first_name","last_name","email","cell_number","country","national_id","start_date","end_date","status","vehicle"]`,
       {
@@ -334,10 +413,20 @@ export async function fetchDrivers() {
         headers: {
           Authorization: `token ${DRIVER_API_TOKEN}`,
         },
+        cache: "no-store",
       },
     )
 
-    return await response.json()
+    if (!response.ok) {
+      console.error("Failed to fetch drivers:", response.status, response.statusText)
+      const errorText = await response.text()
+      console.error("Error response:", errorText)
+      throw new Error(`Failed to fetch drivers: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log("Drivers data:", data)
+    return data
   } catch (error) {
     console.error("Error fetching drivers:", error)
     throw error
@@ -351,7 +440,12 @@ export async function fetchDriverById(driverId: string) {
       headers: {
         Authorization: `token ${DRIVER_API_TOKEN}`,
       },
+      cache: "no-store",
     })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch driver details: ${response.status} ${response.statusText}`)
+    }
 
     return await response.json()
   } catch (error) {
@@ -373,6 +467,10 @@ export async function createDriver(driverData: any) {
       }),
     })
 
+    if (!response.ok) {
+      throw new Error(`Failed to create driver: ${response.status} ${response.statusText}`)
+    }
+
     return await response.json()
   } catch (error) {
     console.error("Error creating driver:", error)
@@ -388,7 +486,12 @@ export async function fetchYears() {
       headers: {
         Authorization: `token ${YEAR_API_TOKEN}`,
       },
+      cache: "no-store",
     })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch years: ${response.status} ${response.statusText}`)
+    }
 
     return await response.json()
   } catch (error) {
