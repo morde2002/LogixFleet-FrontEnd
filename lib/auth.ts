@@ -28,7 +28,27 @@ export async function getCurrentUser(): Promise<User | null> {
 
   if (userData) {
     try {
-      return JSON.parse(userData)
+      const parsedUser = JSON.parse(userData)
+
+      // Special handling for admin emails
+      if (
+        parsedUser.email?.toLowerCase() === "leofleet@gmail.com" ||
+        parsedUser.email?.toLowerCase() === "yesnow@example.com"
+      ) {
+        return {
+          ...parsedUser,
+          role: "Admin",
+          roles: ["Admin", "System Manager"],
+          permissions: {
+            User: ["read", "write", "create", "delete"],
+            Vehicle: ["read", "write", "create", "delete"],
+            Driver: ["read", "write", "create", "delete"],
+            Report: ["read", "write", "create"],
+          },
+        }
+      }
+
+      return parsedUser
     } catch (e) {
       console.error("Error parsing user data:", e)
     }
@@ -116,6 +136,11 @@ export function hasPermission(
 ): boolean {
   if (!user) return false
 
+  // Special case for specific admin emails
+  if (user.email?.toLowerCase() === "leofleet@gmail.com" || user.email?.toLowerCase() === "yesnow@example.com") {
+    return true
+  }
+
   // Admin role has all permissions
   if (user.role === "Admin" || (user.roles && user.roles.includes("Admin"))) {
     return true
@@ -128,4 +153,3 @@ export function hasPermission(
 
   return false
 }
-

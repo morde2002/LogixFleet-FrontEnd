@@ -247,47 +247,47 @@ export function NewVehicleForm() {
     loadYears()
   }
 
-  // async function onSubmit(values: z.infer<typeof formSchema>) {
-  //   try {
-  //     setIsSubmitting(true)
-  //     setError(null)
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      setIsSubmitting(true)
+      setError(null)
 
-  //     if (values.driver === "none") {
-  //       values.driver = undefined
-  //     }
+      if (values.driver === "none") {
+        values.driver = undefined
+      }
 
-  //     console.log("Submitting vehicle data:", values)
-  //     const result = await createVehicle(values)
+      console.log("Submitting vehicle data:", values)
+      const result = await createVehicle(values)
 
-  //     if (result.error) {
-  //       setError(result.error)
-  //       toast({
-  //         variant: "destructive",
-  //         title: "Error",
-  //         description: result.error,
-  //       })
-  //       return
-  //     }
+      if (result.error) {
+        setError(result.error)
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        })
+        return
+      }
 
-  //     toast({
-  //       title: "Vehicle created successfully",
-  //       description: "The vehicle has been added to the fleet.",
-  //     })
+      toast({
+        title: "Vehicle created successfully",
+        description: "The vehicle has been added to the fleet.",
+      })
 
-  //     setIsSuccess(true)
-  //     form.reset()
-  //   } catch (error) {
-  //     console.error("Error creating vehicle:", error)
-  //     setError("An error occurred while creating the vehicle.")
-  //     toast({
-  //       variant: "destructive",
-  //       title: "Error",
-  //       description: "An error occurred while creating the vehicle.",
-  //     })
-  //   } finally {
-  //     setIsSubmitting(false)
-  //   }
-  // }
+      setIsSuccess(true)
+      form.reset()
+    } catch (error) {
+      console.error("Error creating vehicle:", error)
+      setError("An error occurred while creating the vehicle.")
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An error occurred while creating the vehicle.",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   if (isLoadingDrivers || isLoadingMakes || isLoadingModels || isLoadingYears) {
     return (
@@ -572,19 +572,19 @@ export function NewVehicleForm() {
                 type="button"
                 variant="outline"
                 onClick={() => router.push("/dashboard/vehicles")}
-              
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-           
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
+                {isSubmitting ? (
                   <>
                     <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></span>
                     Creating...
                   </>
-              
+                ) : (
                   "Add Vehicle"
-              
+                )}
               </Button>
             </div>
           </form>
@@ -606,4 +606,3 @@ export function NewVehicleForm() {
     </Card>
   )
 }
-

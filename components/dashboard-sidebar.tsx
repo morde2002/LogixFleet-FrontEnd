@@ -228,4 +228,3 @@ export default function DashboardSidebar({ user }: { user: SidebarUser }) {
     </>
   )
 }
-

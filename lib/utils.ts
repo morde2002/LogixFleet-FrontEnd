@@ -28,4 +28,3 @@ export async function sendPasswordEmail(email: string, password: string) {
     setTimeout(resolve, 1000)
   })
 }
-

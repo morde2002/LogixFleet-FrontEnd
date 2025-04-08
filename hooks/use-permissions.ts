@@ -1,28 +1,43 @@
 "use client"
 
-import { useCurrentUser } from "@/hooks/use-current-user"
-
-type PermissionAction = "read" | "write" | "create" | "delete" | "submit" | "cancel" | "amend"
+import { useAuth, type Permission } from "@/contexts/auth-context"
 
 export function usePermissions() {
-  const user = useCurrentUser()
+  const auth = useAuth()
 
-  const hasPermission = (module: string, action: PermissionAction): boolean => {
-    if (!user) return false
-
-    // Admin role has all permissions
-    if (user.role === "Admin" || (user.roles && user.roles.includes("Admin"))) {
-      return true
+  // If auth context is not available or still loading, provide safe defaults
+  if (!auth || auth.isLoading) {
+    return {
+      hasPermission: () => false,
+      hasAnyPermission: () => false,
+      canCreate: () => false,
+      canRead: () => false,
+      canWrite: () => false,
+      canDelete: () => false,
+      canEdit: () => false,
+      canManage: () => false,
+      getAllModules: () => [],
+      getModulePermissions: () => [],
     }
-
-    // Check if user has the specific permission
-    if (user.permissions && user.permissions[module]) {
-      return user.permissions[module].includes(action)
-    }
-
-    return false
   }
 
-  return { hasPermission }
-}
+  const { hasPermission, hasAnyPermission, user } = auth
 
+  return {
+    hasPermission,
+    hasAnyPermission,
+    // Commonly used permission check combinations
+    canCreate: (module: string) => hasPermission(module, "create"),
+    canRead: (module: string) => hasPermission(module, "read"),
+    canWrite: (module: string) => hasPermission(module, "write"),
+    canDelete: (module: string) => hasPermission(module, "delete"),
+    canEdit: (module: string) => hasPermission(module, "write"),
+    canManage: (module: string) => hasAnyPermission(module, ["create", "write", "delete"]),
+
+    // Get all the modules the user has access to
+    getAllModules: () => (user ? Object.keys(user.permissions || {}) : []),
+
+    // Get all permissions for a specific module
+    getModulePermissions: (module: string): Permission[] => user?.permissions?.[module] || [],
+  }
+}

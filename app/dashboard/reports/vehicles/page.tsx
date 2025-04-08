@@ -150,4 +150,3 @@ export default async function VehicleReportPage() {
     </div>
   )
 }
-

@@ -1,17 +1,17 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { usePermissions } from "@/hooks/use-permissions"
 import { AlertCircle, Lock } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import type { Permission } from "@/contexts/auth-context"
 
 type RestrictedButtonProps = React.ComponentProps<typeof Button> & {
   module: string
-  action: "read" | "write" | "create" | "delete" | "submit" | "cancel" | "amend"
+  action: Permission | Permission[]
   fallbackMessage?: string
   showAlert?: boolean
 }
@@ -24,10 +24,10 @@ export function RestrictedButton({
   children,
   ...props
 }: RestrictedButtonProps) {
-  const { hasPermission } = usePermissions()
+  const { hasPermission, hasAnyPermission } = usePermissions()
   const [showErrorAlert, setShowErrorAlert] = useState(false)
 
-  const hasAccess = hasPermission(module, action)
+  const hasAccess = Array.isArray(action) ? hasAnyPermission(module, action) : hasPermission(module, action)
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!hasAccess) {
@@ -82,4 +82,3 @@ export function RestrictedButton({
 
   return <Button {...props}>{children}</Button>
 }
-

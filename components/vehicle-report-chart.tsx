@@ -169,4 +169,3 @@ export function VehicleReportChart({ vehicles, type = "type" }: VehicleReportCha
 
   return null
 }
-

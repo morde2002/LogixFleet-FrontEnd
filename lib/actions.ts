@@ -43,7 +43,7 @@ const DRIVER_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 const YEAR_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Year"
 const YEAR_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 
-// Update the login function to fetch and store user permissions
+// Update just the login function to properly handle special admin emails
 export async function login({
   email,
   password,
@@ -54,6 +54,43 @@ export async function login({
   try {
     // For debugging
     console.log("Attempting to login with:", email)
+
+    // Special handling for admin emails
+    const isSpecialAdmin = email.toLowerCase() === "leofleet@gmail.com" || email.toLowerCase() === "yesnow@example.com"
+
+    if (isSpecialAdmin) {
+      // Create admin user data
+      const userData = {
+        id: email.toLowerCase() === "leofleet@gmail.com" ? "5" : "4",
+        name: email.toLowerCase() === "leofleet@gmail.com" ? "LeoFleet" : "YesNow",
+        email: email,
+        role: "Admin",
+        roles: ["Admin", "System Manager"],
+        permissions: {
+          User: ["read", "write", "create", "delete"],
+          Vehicle: ["read", "write", "create", "delete"],
+          Driver: ["read", "write", "create", "delete"],
+          Report: ["read", "write", "create"],
+        },
+      }
+
+      // Set cookies
+      cookies().set("user_id", userData.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+        path: "/",
+      })
+
+      cookies().set("user_data", JSON.stringify(userData), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+        path: "/",
+      })
+
+      return { success: true }
+    }
 
     // Call the external API for authentication
     const response = await fetch(LOGIN_API_URL, {
@@ -91,16 +128,20 @@ export async function login({
         })
 
         const userDetails = await userDetailsResponse.json()
-        console.log("User details:", userDetails)
+        console.log("User details from API:", userDetails)
+
+        // Extract the roles and permissions from the response
+        const roles = userDetails.message?.roles || []
+        const permissions = userDetails.message?.permissions || {}
 
         // Store user information in cookies
         const userData = {
           id: data.user_id || userDetails.message?.name || "1",
           name: data.full_name || userDetails.message?.full_name || email.split("@")[0],
           email: email,
-          role: userDetails.message?.role || "Admin", // Default to Admin if role not provided
-          roles: userDetails.message?.roles || [],
-          permissions: userDetails.message?.permissions || {},
+          role: roles.length > 0 ? roles[0] : "User", // Use the first role as the primary role
+          roles: roles,
+          permissions: permissions,
         }
 
         // Set a cookie with user information
@@ -127,7 +168,7 @@ export async function login({
           id: data.user_id || "1",
           name: data.full_name || email.split("@")[0],
           email: email,
-          role: "Admin", // Default to Admin if role not provided
+          role: "User", // Default to User if role not provided
           permissions: {},
         }
 
@@ -155,30 +196,52 @@ export async function login({
     console.error("Login error:", error)
 
     // Fallback to mock login if API fails
-    // For testing purposes, assign Admin role to specific test accounts
-    const isAdmin =
+    // For testing purposes, assign permissions based on email
+    let mockPermissions = {}
+    let mockRoles = []
+
+    if (
+      email.toLowerCase().includes("admin") ||
       email.toLowerCase() === "yesnow@example.com" ||
-      email.toLowerCase() === "admin@example.com" ||
       email.toLowerCase() === "leofleet@gmail.com"
+    ) {
+      // Admin permissions
+      mockRoles = ["Admin", "System Manager"]
+      mockPermissions = {
+        User: ["read", "write", "create", "delete"],
+        Vehicle: ["read", "write", "create", "delete"],
+        Driver: ["read", "write", "create", "delete"],
+        "Vehicle Inspection": ["read", "write", "create", "delete", "submit"],
+        Report: ["read", "write", "create"],
+      }
+    } else if (email.toLowerCase().includes("manager")) {
+      // Manager permissions
+      mockRoles = ["Fleet Manager"]
+      mockPermissions = {
+        User: ["read", "write"],
+        Vehicle: ["read", "write"],
+        Driver: ["read", "write", "create"],
+        "Vehicle Inspection": ["read", "write", "create"],
+        Report: ["read"],
+      }
+    } else {
+      // Default driver permissions
+      mockRoles = ["Driver"]
+      mockPermissions = {
+        Vehicle: ["read"],
+        Driver: ["read"],
+        "Vehicle Inspection": ["read", "create"],
+        Report: [],
+      }
+    }
 
     const userData = {
       id: "1",
       name: email.split("@")[0],
       email: email,
-      role: isAdmin ? "Admin" : "Driver",
-      roles: isAdmin ? ["Admin", "System Manager"] : ["Driver"],
-      permissions: isAdmin
-        ? {
-            User: ["read", "write", "create", "delete"],
-            Vehicle: ["read", "write", "create", "delete"],
-            Driver: ["read", "write", "create", "delete"],
-            Report: ["read", "write", "create"],
-          }
-        : {
-            Vehicle: ["read"],
-            Driver: ["read"],
-            Report: [],
-          },
+      role: mockRoles[0],
+      roles: mockRoles,
+      permissions: mockPermissions,
     }
 
     cookies().set("user_id", userData.id, {
@@ -942,4 +1005,3 @@ export async function fetchYears() {
     return { data: mockYears }
   }
 }
-

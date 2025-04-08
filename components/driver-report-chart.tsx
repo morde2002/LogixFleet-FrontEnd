@@ -130,4 +130,3 @@ export function DriverReportChart({ drivers, type = "status" }: DriverReportChar
 
   return null
 }
-

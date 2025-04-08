@@ -97,4 +97,3 @@ export function VehicleReportSummary({ vehicles }: VehicleReportSummaryProps) {
     </div>
   )
 }
-

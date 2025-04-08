@@ -140,4 +140,3 @@ export default async function VehicleDetailsPage({ params }: { params: { id: str
     </div>
   )
 }
-

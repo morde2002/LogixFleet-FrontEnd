@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PlusCircle, MoreHorizontal, Search, Loader2, Download, RefreshCw } from "lucide-react"
+import { PlusCircle, MoreHorizontal, Search, Loader2, Download, RefreshCw, Lock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useCurrentUser } from "@/hooks/use-current-user"
 import { deleteUser, fetchUsers } from "@/lib/actions"
 import { RestrictedButton } from "@/components/restricted-button"
 import { usePermissions } from "@/hooks/use-permissions"
+import { PermissionGate } from "@/components/permission-gate"
 
 type User = {
   name: string
@@ -34,8 +34,7 @@ export function UserTable() {
   const [departmentFilter, setDepartmentFilter] = useState("all")
   const router = useRouter()
   const { toast } = useToast()
-  const currentUser = useCurrentUser()
-  const { hasPermission } = usePermissions()
+  const { canRead, canCreate, canWrite, canDelete } = usePermissions()
 
   const loadUsers = async (showRefreshingState = false) => {
     try {
@@ -83,7 +82,7 @@ export function UserTable() {
   }, [toast])
 
   const handleRefresh = () => {
-    router.refresh()
+    loadUsers(true)
   }
 
   const filteredUsers = users.filter((user) => {
@@ -153,10 +152,6 @@ export function UserTable() {
     link.click()
     document.body.removeChild(link)
   }
-
-  const canCreateUsers = hasPermission("User", "create")
-  const canEditUsers = hasPermission("User", "write")
-  const canDeleteUsers = hasPermission("User", "delete")
 
   if (isLoading) {
     return (
@@ -277,45 +272,53 @@ export function UserTable() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          {canEditUsers ? (
+                          <PermissionGate
+                            module="User"
+                            permission="write"
+                            fallback={
+                              <DropdownMenuItem
+                                className="text-orange-500"
+                                onClick={() =>
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Access Denied",
+                                    description: "You don't have permission to edit users",
+                                  })
+                                }
+                              >
+                                <Lock className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                            }
+                          >
                             <DropdownMenuItem onClick={() => router.push(`/dashboard/users/edit/${user.name}`)}>
                               Edit
                             </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem
-                              className="text-orange-500"
-                              onClick={() =>
-                                toast({
-                                  variant: "destructive",
-                                  title: "Access Denied",
-                                  description: "You don't have permission to edit users",
-                                })
-                              }
-                            >
-                              <Lock className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                          )}
+                          </PermissionGate>
 
-                          {canDeleteUsers ? (
+                          <PermissionGate
+                            module="User"
+                            permission="delete"
+                            fallback={
+                              <DropdownMenuItem
+                                className="text-orange-500"
+                                onClick={() =>
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Access Denied",
+                                    description: "You don't have permission to delete users",
+                                  })
+                                }
+                              >
+                                <Lock className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            }
+                          >
                             <DropdownMenuItem onClick={() => handleDeleteUser(user.name)} className="text-red-600">
                               Delete
                             </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem
-                              className="text-orange-500"
-                              onClick={() =>
-                                toast({
-                                  variant: "destructive",
-                                  title: "Access Denied",
-                                  description: "You don't have permission to delete users",
-                                })
-                              }
-                            >
-                              <Lock className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          )}
+                          </PermissionGate>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -335,4 +338,3 @@ export function UserTable() {
     </div>
   )
 }
-

@@ -9,10 +9,10 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PlusCircle, MoreHorizontal, Search, Loader2, Download, RefreshCw, Lock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useCurrentUser } from "@/hooks/use-current-user"
 import { fetchVehicles } from "@/lib/actions"
 import { RestrictedButton } from "@/components/restricted-button"
 import { usePermissions } from "@/hooks/use-permissions"
+import { PermissionGate } from "@/components/permission-gate"
 
 type Vehicle = {
   name?: string
@@ -36,8 +36,7 @@ export function VehicleTable() {
   const [typeFilter, setTypeFilter] = useState("all")
   const router = useRouter()
   const { toast } = useToast()
-  const currentUser = useCurrentUser()
-  const { hasPermission } = usePermissions()
+  const { canRead, canCreate, canWrite } = usePermissions()
 
   const loadVehicles = async (showRefreshingState = false) => {
     try {
@@ -79,7 +78,7 @@ export function VehicleTable() {
   }, [toast])
 
   const handleRefresh = () => {
-    router.refresh()
+    loadVehicles(true)
   }
 
   // Get unique vehicle types for filter
@@ -96,10 +95,6 @@ export function VehicleTable() {
 
     return matchesSearch && matchesType
   })
-
-  const canCreateVehicles = hasPermission("Vehicle", "create")
-  const canEditVehicles = hasPermission("Vehicle", "write")
-  const canViewVehicleDetails = hasPermission("Vehicle", "read")
 
   const exportToCSV = () => {
     // Create CSV content
@@ -232,73 +227,79 @@ export function VehicleTable() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          {canViewVehicleDetails ? (
+                          <PermissionGate
+                            module="Vehicle"
+                            permission="read"
+                            fallback={
+                              <DropdownMenuItem
+                                className="text-orange-500"
+                                onClick={() =>
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Access Denied",
+                                    description: "You don't have permission to view vehicle details",
+                                  })
+                                }
+                              >
+                                <Lock className="mr-2 h-4 w-4" />
+                                View Details
+                              </DropdownMenuItem>
+                            }
+                          >
                             <DropdownMenuItem
                               onClick={() => router.push(`/dashboard/vehicles/${vehicle.name || index}`)}
                             >
                               View Details
                             </DropdownMenuItem>
-                          ) : (
+                          </PermissionGate>
+
+                          <PermissionGate
+                            module="Vehicle"
+                            permission="write"
+                            fallback={
+                              <>
+                                <DropdownMenuItem
+                                  className="text-orange-500"
+                                  onClick={() =>
+                                    toast({
+                                      variant: "destructive",
+                                      title: "Access Denied",
+                                      description: "You don't have permission to edit vehicles",
+                                    })
+                                  }
+                                >
+                                  <Lock className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-orange-500"
+                                  onClick={() =>
+                                    toast({
+                                      variant: "destructive",
+                                      title: "Access Denied",
+                                      description: "You don't have permission to schedule service",
+                                    })
+                                  }
+                                >
+                                  <Lock className="mr-2 h-4 w-4" />
+                                  Schedule Service
+                                </DropdownMenuItem>
+                              </>
+                            }
+                          >
                             <DropdownMenuItem
-                              className="text-orange-500"
+                              onClick={() => router.push(`/dashboard/vehicles/edit/${vehicle.name || index}`)}
+                            >
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
                               onClick={() =>
-                                toast({
-                                  variant: "destructive",
-                                  title: "Access Denied",
-                                  description: "You don't have permission to view vehicle details",
-                                })
+                                router.push(`/dashboard/vehicles/service/new?vehicle=${vehicle.name || index}`)
                               }
                             >
-                              <Lock className="mr-2 h-4 w-4" />
-                              View Details
+                              Schedule Service
                             </DropdownMenuItem>
-                          )}
-
-                          {canEditVehicles ? (
-                            <>
-                              <DropdownMenuItem
-                                onClick={() => router.push(`/dashboard/vehicles/edit/${vehicle.name || index}`)}
-                              >
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  router.push(`/dashboard/vehicles/service/new?vehicle=${vehicle.name || index}`)
-                                }
-                              >
-                                Schedule Service
-                              </DropdownMenuItem>
-                            </>
-                          ) : (
-                            <>
-                              <DropdownMenuItem
-                                className="text-orange-500"
-                                onClick={() =>
-                                  toast({
-                                    variant: "destructive",
-                                    title: "Access Denied",
-                                    description: "You don't have permission to edit vehicles",
-                                  })
-                                }
-                              >
-                                <Lock className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-orange-500"
-                                onClick={() =>
-                                  toast({
-                                    variant: "destructive",
-                                    title: "Access Denied",
-                                    description: "You don't have permission to schedule service",
-                                  })
-                                }
-                              >
-                                <Lock className="mr-2 h-4 w-4" />
-                                Schedule Service
-                              </DropdownMenuItem>
-                            </>
-                          )}
+                          </PermissionGate>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -318,4 +319,3 @@ export function VehicleTable() {
     </div>
   )
 }
-

@@ -92,4 +92,3 @@ export function useCurrentUser() {
 
   return user
 }
-
