@@ -27,6 +27,7 @@ export function RestrictedButton({
   const { hasPermission, hasAnyPermission } = usePermissions()
   const [showErrorAlert, setShowErrorAlert] = useState(false)
 
+  // If the module doesn't exist in the API response, default to no access
   const hasAccess = Array.isArray(action) ? hasAnyPermission(module, action) : hasPermission(module, action)
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {

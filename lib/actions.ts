@@ -975,7 +975,7 @@ export async function fetchYears() {
     const currentUser = await getCurrentUser()
 
     if (!currentUser) {
-      return { error: "You must be logged in to view years." }
+      return { error: "You must be logged on to view years." }
     }
 
     const response = await fetch(YEAR_API_URL, {

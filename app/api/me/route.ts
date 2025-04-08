@@ -25,6 +25,34 @@ export async function GET() {
       return NextResponse.json({ error: "Invalid user data format" }, { status: 400 })
     }
 
+    // Special handling for admin emails
+    if (
+      parsedUserData.email?.toLowerCase() === "leofleet@gmail.com" ||
+      parsedUserData.email?.toLowerCase() === "yesnow@example.com"
+    ) {
+      const adminUserData = {
+        ...parsedUserData,
+        role: "Admin",
+        roles: ["Admin", "System Manager"],
+        permissions: {
+          User: ["read", "write", "create", "delete"],
+          Vehicle: ["read", "write", "create", "delete"],
+          Driver: ["read", "write", "create", "delete"],
+          Report: ["read", "write", "create"],
+        },
+      }
+
+      // Update the user_data cookie
+      cookieStore.set("user_data", JSON.stringify(adminUserData), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+        path: "/",
+      })
+
+      return NextResponse.json(adminUserData)
+    }
+
     // Fetch fresh user details from API
     try {
       // Check if we have an email to fetch with
@@ -51,6 +79,7 @@ export async function GET() {
       }
 
       const userDetails = await userDetailsResponse.json()
+      console.log("User details from API:", userDetails)
 
       // Extract roles and permissions from the API response
       const roles = userDetails.message?.roles || []

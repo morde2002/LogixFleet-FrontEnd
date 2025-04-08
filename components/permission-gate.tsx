@@ -14,6 +14,7 @@ interface PermissionGateProps {
 export function PermissionGate({ module, permission, fallback = null, children }: PermissionGateProps) {
   const { hasPermission, hasAnyPermission } = usePermissions()
 
+  // If the module doesn't exist in the API response, default to no access
   const hasAccess = Array.isArray(permission) ? hasAnyPermission(module, permission) : hasPermission(module, permission)
 
   if (!hasAccess) return <>{fallback}</>

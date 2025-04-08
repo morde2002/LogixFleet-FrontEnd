@@ -16,6 +16,9 @@ export function usePermissions() {
       canDelete: () => false,
       canEdit: () => false,
       canManage: () => false,
+      canSubmit: () => false,
+      canCancel: () => false,
+      canAmend: () => false,
       getAllModules: () => [],
       getModulePermissions: () => [],
     }
@@ -33,6 +36,9 @@ export function usePermissions() {
     canDelete: (module: string) => hasPermission(module, "delete"),
     canEdit: (module: string) => hasPermission(module, "write"),
     canManage: (module: string) => hasAnyPermission(module, ["create", "write", "delete"]),
+    canSubmit: (module: string) => hasPermission(module, "submit"),
+    canCancel: (module: string) => hasPermission(module, "cancel"),
+    canAmend: (module: string) => hasPermission(module, "amend"),
 
     // Get all the modules the user has access to
     getAllModules: () => (user ? Object.keys(user.permissions || {}) : []),
