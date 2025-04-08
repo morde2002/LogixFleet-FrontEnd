@@ -9,8 +9,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "LogixFleet ERP",
-  description: "Fleet Management ERP System",
-    generator: 'v0.dev'
+  description: "Fleet Management ERP System"
 }
 
 export default function RootLayout({
