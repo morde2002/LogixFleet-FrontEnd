@@ -69,16 +69,15 @@ export function DashboardSidebar({ user }: { user: AuthUser }) {
               </SidebarMenuButton>
             </SidebarMenuItem>
 
-            {canAccessUsers && (
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/users")}>
-                  <Link href="/dashboard/users">
-                    <Users className="mr-2 h-5 w-5" />
-                    <span>Users</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
+
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/users")}>
+                <Link href="/dashboard/users">
+                  <Users className="mr-2 h-5 w-5" />
+                  <span>Users</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
 
             {canAccessVehicles && (
               <Collapsible>
