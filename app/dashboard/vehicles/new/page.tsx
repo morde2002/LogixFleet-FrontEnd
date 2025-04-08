@@ -16,6 +16,7 @@ import { Loader2, ArrowLeft } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useAuth } from "@/contexts/auth-context"
+import { fetchDrivers, fetchVehicleMakes, fetchVehicleModels, fetchYears, createVehicle } from "@/lib/api"
 
 const formSchema = z.object({
   license_plate: z.string().min(2, "License plate must be at least 2 characters."),
@@ -38,14 +39,14 @@ export default function NewVehiclePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [drivers, setDrivers] = useState<{ id: string; name: string }[]>([])
-  const [vehicleMakes, setVehicleMakes] = useState<{ name: string }[]>([])
-  const [vehicleModels, setVehicleModels] = useState<{ name: string; make?: string }[]>([])
-  const [filteredModels, setFilteredModels] = useState<{ name: string; make?: string }[]>([])
+  const [drivers, setDrivers] = useState<any[]>([])
+  const [vehicleMakes, setVehicleMakes] = useState<any[]>([])
+  const [vehicleModels, setVehicleModels] = useState<any[]>([])
+  const [filteredModels, setFilteredModels] = useState<any[]>([])
   const [isLoadingDrivers, setIsLoadingDrivers] = useState(true)
   const [isLoadingMakes, setIsLoadingMakes] = useState(true)
   const [isLoadingModels, setIsLoadingModels] = useState(true)
-  const [years, setYears] = useState<{ name: string }[]>([])
+  const [years, setYears] = useState<any[]>([])
   const [isLoadingYears, setIsLoadingYears] = useState(true)
   const router = useRouter()
   const { toast } = useToast()
@@ -97,38 +98,42 @@ export default function NewVehiclePage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // In a real app, these would be API calls
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        // Load drivers
+        setIsLoadingDrivers(true)
+        const driversResponse = await fetchDrivers()
+        if (driversResponse.data) {
+          setDrivers(driversResponse.data)
+        }
+        setIsLoadingDrivers(false)
 
-        // Mock data for dropdowns
-        setDrivers([
-          { id: "1", name: "John Doe" },
-          { id: "2", name: "Jane Smith" },
-          { id: "3", name: "Mike Johnson" },
-          { id: "4", name: "Sarah Williams" },
-        ])
+        // Load vehicle makes
+        setIsLoadingMakes(true)
+        const makesResponse = await fetchVehicleMakes()
+        if (makesResponse.data) {
+          setVehicleMakes(makesResponse.data)
+        }
+        setIsLoadingMakes(false)
 
-        setVehicleMakes([
-          { name: "Toyota" },
-          { name: "Honda" },
-          { name: "Ford" },
-          { name: "Nissan" },
-          { name: "Dai Hatsu" },
-        ])
+        // Load vehicle models
+        setIsLoadingModels(true)
+        const modelsResponse = await fetchVehicleModels()
+        if (modelsResponse.data) {
+          setVehicleModels(modelsResponse.data)
+          setFilteredModels(modelsResponse.data)
+        }
+        setIsLoadingModels(false)
 
-        setVehicleModels([
-          { name: "Corolla", make: "Toyota" },
-          { name: "Camry", make: "Toyota" },
-          { name: "Civic", make: "Honda" },
-          { name: "Accord", make: "Honda" },
-          { name: "F-150", make: "Ford" },
-          { name: "Ranger", make: "Ford" },
-          { name: "Altima", make: "Nissan" },
-          { name: "Mira", make: "Dai Hatsu" },
-        ])
-
-        const currentYear = new Date().getFullYear()
-        setYears(Array.from({ length: 30 }, (_, i) => ({ name: String(currentYear - i) })))
+        // Load years
+        setIsLoadingYears(true)
+        const yearsResponse = await fetchYears()
+        if (yearsResponse.data) {
+          setYears(yearsResponse.data)
+        } else {
+          // Fallback if years API fails
+          const currentYear = new Date().getFullYear()
+          setYears(Array.from({ length: 30 }, (_, i) => ({ name: String(currentYear - i) })))
+        }
+        setIsLoadingYears(false)
       } catch (error) {
         console.error("Error loading data:", error)
         toast({
@@ -136,7 +141,8 @@ export default function NewVehiclePage() {
           title: "Error",
           description: "Failed to load data. Please try again.",
         })
-      } finally {
+
+        // Set loading states to false to prevent infinite loading
         setIsLoadingDrivers(false)
         setIsLoadingMakes(false)
         setIsLoadingModels(false)
@@ -154,8 +160,17 @@ export default function NewVehiclePage() {
 
       console.log("Submitting vehicle data:", values)
 
-      // In a real app, this would be an API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const response = await createVehicle(values)
+
+      if (response.error) {
+        setError(response.error || "Failed to create vehicle")
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: response.error || "Failed to create vehicle",
+        })
+        return
+      }
 
       toast({
         title: "Vehicle created successfully",
@@ -449,8 +464,8 @@ export default function NewVehiclePage() {
                         <SelectContent>
                           <SelectItem value="none">None</SelectItem>
                           {drivers.map((driver) => (
-                            <SelectItem key={driver.id} value={driver.id}>
-                              {driver.name}
+                            <SelectItem key={driver.name} value={driver.name}>
+                              {driver.first_name} {driver.last_name}
                             </SelectItem>
                           ))}
                         </SelectContent>

@@ -16,6 +16,7 @@ import {
   CreditCard,
   Wrench,
   Menu,
+  Users,
 } from "lucide-react"
 import {
   Sidebar,
@@ -28,16 +29,17 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { useAuth, type User } from "@/contexts/auth-context"
+import { useAuth, type User as AuthUser } from "@/contexts/auth-context"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { usePermissions } from "@/hooks/use-permissions"
 
-export function DashboardSidebar({ user }: { user: User }) {
+export function DashboardSidebar({ user }: { user: AuthUser }) {
   const pathname = usePathname()
   const { logout } = useAuth()
   const { canRead, hasModule } = usePermissions()
 
   // Check permissions for different modules
+  const canAccessUsers = canRead("User")
   const canAccessVehicles = canRead("Vehicle")
   const canAccessDrivers = canRead("Driver")
   const canAccessMechanics = canRead("Mechanic")
@@ -66,6 +68,17 @@ export function DashboardSidebar({ user }: { user: User }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+
+            {canAccessUsers && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/users")}>
+                  <Link href="/dashboard/users">
+                    <Users className="mr-2 h-5 w-5" />
+                    <span>Users</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
 
             {canAccessVehicles && (
               <Collapsible>

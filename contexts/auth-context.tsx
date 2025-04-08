@@ -5,6 +5,7 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
+import { loginUser, getUserDetails } from "@/lib/api"
 
 // Types based on the API response
 export type Permission = "read" | "write" | "create" | "delete" | "submit" | "cancel" | "amend"
@@ -35,11 +36,6 @@ type AuthContextType = {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-// API endpoints
-const LOGIN_API_URL = "https://rjlogistics.logixfleetapp.com/api/method/login"
-const USER_DETAILS_API_URL = "https://rjlogistics.logixfleetapp.com/api/method/erpnext.api.get_user_details"
-const API_TOKEN = "13560c2ae837ee8:47a214defca981e"
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -98,21 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true)
 
       // Call login API
-      const loginResponse = await fetch(LOGIN_API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `token ${API_TOKEN}`,
-        },
-        body: JSON.stringify({
-          usr: email,
-          pwd: password,
-        }),
-      })
+      const loginData = await loginUser(email, password)
 
-      const loginData = await loginResponse.json()
-
-      if (!loginResponse.ok) {
+      if (loginData.message !== "Logged In") {
         return {
           success: false,
           error: loginData.message || "Invalid credentials",
@@ -120,21 +104,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // If login successful, fetch user details
-      const userDetailsResponse = await fetch(`${USER_DETAILS_API_URL}?email=${encodeURIComponent(email)}`, {
-        method: "GET",
-        headers: {
-          Authorization: `token ${API_TOKEN}`,
-        },
-      })
+      const userDetailsData = await getUserDetails(email)
 
-      if (!userDetailsResponse.ok) {
+      if (!userDetailsData.message) {
         return {
           success: false,
           error: "Failed to fetch user details",
         }
       }
-
-      const userDetailsData = await userDetailsResponse.json()
 
       // Create user object from API response
       const userData: User = {
@@ -175,14 +152,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true)
 
-      const userDetailsResponse = await fetch(`${USER_DETAILS_API_URL}?email=${encodeURIComponent(user.email)}`, {
-        method: "GET",
-        headers: {
-          Authorization: `token ${API_TOKEN}`,
-        },
-      })
+      const userDetailsData = await getUserDetails(user.email)
 
-      if (!userDetailsResponse.ok) {
+      if (!userDetailsData.message) {
         toast({
           title: "Error",
           description: "Failed to refresh user data",
@@ -190,8 +162,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
         return
       }
-
-      const userDetailsData = await userDetailsResponse.json()
 
       // Update user object from API response
       const userData: User = {
