@@ -44,42 +44,44 @@ export function RestrictedButton({
     props.onClick?.(e)
   }
 
-  if (!hasAccess) {
-    return (
-      <>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                {...props}
-                onClick={handleClick}
-                variant="outline"
-                className="text-orange-500 border-orange-300 bg-orange-50 hover:bg-orange-100 hover:text-orange-600"
-                disabled={props.disabled}
-              >
-                <Lock className="mr-2 h-4 w-4" />
-                {children}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{fallbackMessage}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
-        {showErrorAlert && showAlert && (
-          <Alert
-            variant="destructive"
-            className="fixed bottom-4 right-4 w-96 z-50 animate-in fade-in slide-in-from-bottom-5"
-          >
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Access Denied</AlertTitle>
-            <AlertDescription>{fallbackMessage}</AlertDescription>
-          </Alert>
-        )}
-      </>
-    )
+  // If user has access, render a normal button with the original props
+  if (hasAccess) {
+    return <Button {...props}>{children}</Button>
   }
 
-  return <Button {...props}>{children}</Button>
+  // If user doesn't have access, render a restricted button
+  return (
+    <>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              {...props}
+              onClick={handleClick}
+              variant="outline"
+              className="text-orange-500 border-orange-300 bg-orange-50 hover:bg-orange-100 hover:text-orange-600"
+              disabled={props.disabled}
+            >
+              <Lock className="mr-2 h-4 w-4" />
+              {children}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{fallbackMessage}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {showErrorAlert && showAlert && (
+        <Alert
+          variant="destructive"
+          className="fixed bottom-4 right-4 w-96 z-50 animate-in fade-in slide-in-from-bottom-5"
+        >
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Access Denied</AlertTitle>
+          <AlertDescription>{fallbackMessage}</AlertDescription>
+        </Alert>
+      )}
+    </>
+  )
 }

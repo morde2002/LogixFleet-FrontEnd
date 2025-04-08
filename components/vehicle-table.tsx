@@ -257,34 +257,19 @@ export function VehicleTable() {
                             module="Vehicle"
                             permission="write"
                             fallback={
-                              <>
-                                <DropdownMenuItem
-                                  className="text-orange-500"
-                                  onClick={() =>
-                                    toast({
-                                      variant: "destructive",
-                                      title: "Access Denied",
-                                      description: "You don't have permission to edit vehicles",
-                                    })
-                                  }
-                                >
-                                  <Lock className="mr-2 h-4 w-4" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-orange-500"
-                                  onClick={() =>
-                                    toast({
-                                      variant: "destructive",
-                                      title: "Access Denied",
-                                      description: "You don't have permission to schedule service",
-                                    })
-                                  }
-                                >
-                                  <Lock className="mr-2 h-4 w-4" />
-                                  Schedule Service
-                                </DropdownMenuItem>
-                              </>
+                              <DropdownMenuItem
+                                className="text-orange-500"
+                                onClick={() =>
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Access Denied",
+                                    description: "You don't have permission to edit vehicles",
+                                  })
+                                }
+                              >
+                                <Lock className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
                             }
                           >
                             <DropdownMenuItem
@@ -292,6 +277,27 @@ export function VehicleTable() {
                             >
                               Edit
                             </DropdownMenuItem>
+                          </PermissionGate>
+
+                          <PermissionGate
+                            module="Vehicle"
+                            permission="write"
+                            fallback={
+                              <DropdownMenuItem
+                                className="text-orange-500"
+                                onClick={() =>
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Access Denied",
+                                    description: "You don't have permission to schedule service",
+                                  })
+                                }
+                              >
+                                <Lock className="mr-2 h-4 w-4" />
+                                Schedule Service
+                              </DropdownMenuItem>
+                            }
+                          >
                             <DropdownMenuItem
                               onClick={() =>
                                 router.push(`/dashboard/vehicles/service/new?vehicle=${vehicle.name || index}`)
