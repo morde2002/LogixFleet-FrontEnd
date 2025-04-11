@@ -165,176 +165,178 @@ export function UserTable() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-        <div className="flex flex-1 items-center space-x-2">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search users..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+    <PermissionGate docType="User" permission="read" showAlert={true}>
+      <div className="space-y-4">
+        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+          <div className="flex flex-1 items-center space-x-2">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search users..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="Admin">Admin</SelectItem>
+                <SelectItem value="FleetManager">Fleet Manager</SelectItem>
+                <SelectItem value="Driver">Driver</SelectItem>
+                <SelectItem value="Accountant">Accountant</SelectItem>
+                <SelectItem value="Supervisor">Supervisor</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                <SelectItem value="Operations">Operations</SelectItem>
+                <SelectItem value="Maintenance">Maintenance</SelectItem>
+                <SelectItem value="Finance">Finance</SelectItem>
+                <SelectItem value="Administration">Administration</SelectItem>
+                <SelectItem value="Logistics">Logistics</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title="Refresh">
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            </Button>
           </div>
 
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="Admin">Admin</SelectItem>
-              <SelectItem value="FleetManager">Fleet Manager</SelectItem>
-              <SelectItem value="Driver">Driver</SelectItem>
-              <SelectItem value="Accountant">Accountant</SelectItem>
-              <SelectItem value="Supervisor">Supervisor</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={exportToCSV} className="flex items-center gap-2">
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
 
-          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by department" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Departments</SelectItem>
-              <SelectItem value="Operations">Operations</SelectItem>
-              <SelectItem value="Maintenance">Maintenance</SelectItem>
-              <SelectItem value="Finance">Finance</SelectItem>
-              <SelectItem value="Administration">Administration</SelectItem>
-              <SelectItem value="Logistics">Logistics</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing} title="Refresh">
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-          </Button>
+            <RestrictedButton
+              docType="User"
+              permission="create"
+              onClick={() => router.push("/dashboard/users/new")}
+              className="bg-blue-600 hover:bg-blue-700"
+              fallbackMessage="You don't have permission to create users"
+              showAlert={true}
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add New User
+            </RestrictedButton>
+          </div>
         </div>
 
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={exportToCSV} className="flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            Export CSV
-          </Button>
-
-          <RestrictedButton
-            module="User"
-            action="create"
-            onClick={() => router.push("/dashboard/users/new")}
-            className="bg-blue-600 hover:bg-blue-700"
-            fallbackMessage="You don't have permission to create users"
-            showAlert={true}
-          >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add New User
-          </RestrictedButton>
-        </div>
-      </div>
-
-      <div className="rounded-md border overflow-hidden">
-        <div className="table-scroll-container">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead className="hidden md:table-cell">Role</TableHead>
-                <TableHead className="hidden md:table-cell">Department</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
-                  <TableRow key={user.name}>
-                    <TableCell className="font-medium">
-                      {user.full_name || `${user.first_name || ""} ${user.last_name || ""}`}
-                    </TableCell>
-                    <TableCell className="truncate max-w-[150px]">{user.email}</TableCell>
-                    <TableCell className="hidden md:table-cell">{user.role}</TableCell>
-                    <TableCell className="hidden md:table-cell">{user.department}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          user.enabled === 1 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {user.enabled === 1 ? "Active" : "Inactive"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <PermissionGate
-                            module="User"
-                            permission="write"
-                            fallback={
-                              <DropdownMenuItem
-                                className="text-orange-500"
-                                onClick={() =>
-                                  toast({
-                                    variant: "destructive",
-                                    title: "Access Denied",
-                                    description: "You don't have permission to edit users",
-                                  })
-                                }
-                              >
-                                <Lock className="mr-2 h-4 w-4" />
+        <div className="rounded-md border overflow-hidden">
+          <div className="table-scroll-container">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="hidden md:table-cell">Role</TableHead>
+                  <TableHead className="hidden md:table-cell">Department</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map((user) => (
+                    <TableRow key={user.name}>
+                      <TableCell className="font-medium">
+                        {user.full_name || `${user.first_name || ""} ${user.last_name || ""}`}
+                      </TableCell>
+                      <TableCell className="truncate max-w-[150px]">{user.email}</TableCell>
+                      <TableCell className="hidden md:table-cell">{user.role}</TableCell>
+                      <TableCell className="hidden md:table-cell">{user.department}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            user.enabled === 1 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {user.enabled === 1 ? "Active" : "Inactive"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <PermissionGate
+                              docType="User"
+                              permission="write"
+                              fallback={
+                                <DropdownMenuItem
+                                  className="text-orange-500"
+                                  onClick={() =>
+                                    toast({
+                                      variant: "destructive",
+                                      title: "Access Denied",
+                                      description: "You don't have permission to edit users",
+                                    })
+                                  }
+                                >
+                                  <Lock className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                              }
+                            >
+                              <DropdownMenuItem onClick={() => router.push(`/dashboard/users/edit/${user.name}`)}>
                                 Edit
                               </DropdownMenuItem>
-                            }
-                          >
-                            <DropdownMenuItem onClick={() => router.push(`/dashboard/users/edit/${user.name}`)}>
-                              Edit
-                            </DropdownMenuItem>
-                          </PermissionGate>
+                            </PermissionGate>
 
-                          <PermissionGate
-                            module="User"
-                            permission="delete"
-                            fallback={
-                              <DropdownMenuItem
-                                className="text-orange-500"
-                                onClick={() =>
-                                  toast({
-                                    variant: "destructive",
-                                    title: "Access Denied",
-                                    description: "You don't have permission to delete users",
-                                  })
-                                }
-                              >
-                                <Lock className="mr-2 h-4 w-4" />
+                            <PermissionGate
+                              docType="User"
+                              permission="delete"
+                              fallback={
+                                <DropdownMenuItem
+                                  className="text-orange-500"
+                                  onClick={() =>
+                                    toast({
+                                      variant: "destructive",
+                                      title: "Access Denied",
+                                      description: "You don't have permission to delete users",
+                                    })
+                                  }
+                                >
+                                  <Lock className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              }
+                            >
+                              <DropdownMenuItem onClick={() => handleDeleteUser(user.name)} className="text-red-600">
                                 Delete
                               </DropdownMenuItem>
-                            }
-                          >
-                            <DropdownMenuItem onClick={() => handleDeleteUser(user.name)} className="text-red-600">
-                              Delete
-                            </DropdownMenuItem>
-                          </PermissionGate>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            </PermissionGate>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      No users found.
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    No users found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
-    </div>
+    </PermissionGate>
   )
 }

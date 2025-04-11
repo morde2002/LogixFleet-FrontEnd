@@ -80,18 +80,20 @@ export function TopNavigation() {
 
         {/* Profile */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 px-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700">
-                {user?.name?.charAt(0) || user?.email.charAt(0) || "U"}
-              </div>
-              <div className="hidden flex-col items-start text-left md:flex">
-                <span className="text-sm font-medium">{user?.name || user?.email.split("@")[0] || "User"}</span>
-                <span className="text-xs text-gray-500">{user?.roles[0] || "User"}</span>
-              </div>
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="flex items-center gap-2 px-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+              {user?.name?.charAt(0)?.toUpperCase() || 
+              user?.email?.charAt(0)?.toUpperCase() || 
+              "U"}
+            </div>
+            <div className="hidden flex-col items-start text-left md:flex">
+              <span className="text-sm font-medium">{user?.name || user?.email?.split("@")[0] || "User"}</span>
+              <span className="text-xs text-gray-500">{user?.roles?.[0] || "User"}</span>
+            </div>
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem asChild>
               <Link href="/dashboard/profile">

@@ -19,7 +19,9 @@ export type User = {
   name?: string
   roles: string[]
   modules: string[]
-  permissions: ModulePermissions
+  permissions: {
+    [docType: string]: Permission[]
+  }
 }
 
 type AuthContextType = {
@@ -46,6 +48,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasPermission = useCallback(
     (docType: string, permission: Permission): boolean => {
       if (!user) return false
+
+      // Special handling for admin emails
+      if (user.email?.toLowerCase() === "leofleet@gmail.com" || user.email?.toLowerCase() === "yesnow@example.com") {
+        return true
+      }
 
       // Check if the document type exists in permissions
       if (!user.permissions[docType]) return false

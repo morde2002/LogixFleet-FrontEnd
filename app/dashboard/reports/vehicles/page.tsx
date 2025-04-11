@@ -1,4 +1,11 @@
 import { redirect } from "next/navigation"
+
+// Extend the Window interface to include __VEHICLE_DATA__
+declare global {
+  interface Window {
+    __VEHICLE_DATA__?: any[];
+  }
+}
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { getCurrentUser } from "@/lib/auth"
@@ -72,12 +79,15 @@ export default async function VehicleReportPage() {
           </Button>
           <Button
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-            onClick={{
-              __html: `(function() { 
-                window.__VEHICLE_DATA__ = ${JSON.stringify(vehicles)};
-                (${exportReportData})();
+            onClick={() => {
+              window.__VEHICLE_DATA__ = vehicles;
+              const exportScript = document.createElement("script");
+              exportScript.textContent = `
+                ${exportReportData}
                 exportVehicleReport();
-              })()`,
+              `;
+              document.body.appendChild(exportScript);
+              document.body.removeChild(exportScript);
             }}
           >
             <Download className="h-4 w-4" />
@@ -102,7 +112,7 @@ export default async function VehicleReportPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              {vehicles.filter((v) => v.status === "Active" || !v.status).length}
+              {vehicles.filter((v: { status: string; }) => v.status === "Active" || !v.status).length}
             </div>
           </CardContent>
         </Card>
@@ -112,7 +122,7 @@ export default async function VehicleReportPage() {
             <CardTitle className="text-sm font-medium text-gray-500">Maintenance Required</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{vehicles.filter((v) => v.status === "Maintenance").length}</div>
+            <div className="text-3xl font-bold">{vehicles.filter((v: { status: string; }) => v.status === "Maintenance").length}</div>
           </CardContent>
         </Card>
       </div>

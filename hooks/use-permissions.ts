@@ -3,7 +3,7 @@
 import { useAuth, type Permission } from "@/contexts/auth-context"
 
 export function usePermissions() {
-  const { hasPermission, hasAnyPermission, hasRole, hasModule, user } = useAuth()
+  const { hasPermission, hasAnyPermission, hasRole, user } = useAuth()
 
   return {
     // Document type permission checks
@@ -14,7 +14,7 @@ export function usePermissions() {
     hasRole,
 
     // Module checks
-    hasModule,
+    hasModule: (module: string) => user?.modules?.includes(module) || false,
 
     // Common permission checks
     canRead: (docType: string) => hasPermission(docType, "read"),

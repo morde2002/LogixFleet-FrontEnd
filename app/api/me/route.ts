@@ -3,7 +3,7 @@ import { cookies } from "next/headers"
 
 // API endpoints and tokens
 const USER_DETAILS_API_URL = "https://rjlogistics.logixfleetapp.com/api/method/erpnext.api.get_user_details"
-const USER_DETAILS_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
+const USER_DETAILS_API_TOKEN = "13560c2ae837ee8:47a214defca981e"
 
 export async function GET() {
   try {

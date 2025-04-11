@@ -16,7 +16,7 @@ export type User = {
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const userId = cookieStore.get("user_id")?.value
 
   if (!userId) {
@@ -93,6 +93,7 @@ export async function getCurrentUser(): Promise<User | null> {
         Vehicle: ["read"],
         Driver: ["read"],
         Report: [],
+        User: [],
       },
     },
     {

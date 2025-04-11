@@ -11,13 +11,13 @@ export default async function VehicleDetailsPage({ params }: { params: { id: str
 
   // Redirect to login if not authenticated
   if (!user) {
-    redirect("/")
+    redirect("/?error=Please+log+in+to+view+vehicle+details")
   }
 
   const result = await fetchVehicleById(params.id)
 
   if (result.error || !result.data) {
-    redirect("/dashboard/vehicles")
+    redirect("/dashboard/vehicles?error=Vehicle+not+found+or+unable+to+load+vehicle+details")
   }
 
   const vehicle = result.data
@@ -119,19 +119,19 @@ export default async function VehicleDetailsPage({ params }: { params: { id: str
 
       <div className="grid gap-6 md:grid-cols-3">
         <Button variant="outline" className="h-20 flex flex-col items-center justify-center" asChild>
-          <Link href={`/dashboard/vehicles/service/new?vehicle=${vehicle.name}`}>
+          <Link href={`/dashboard/vehicles/service/new?vehicle=${vehicle.name || vehicle.license_plate}`}>
             <Tool className="h-6 w-6 mb-1" />
             <span>Schedule Service</span>
           </Link>
         </Button>
         <Button variant="outline" className="h-20 flex flex-col items-center justify-center" asChild>
-          <Link href={`/dashboard/vehicles/inspections/new?vehicle=${vehicle.name}`}>
+          <Link href={`/dashboard/vehicles/inspections/new?vehicle=${vehicle.name || vehicle.license_plate}`}>
             <Car className="h-6 w-6 mb-1" />
             <span>Record Inspection</span>
           </Link>
         </Button>
         <Button variant="outline" className="h-20 flex flex-col items-center justify-center" asChild>
-          <Link href={`/dashboard/vehicles/history/${vehicle.name}`}>
+          <Link href={`/dashboard/vehicles/history/${vehicle.name || vehicle.license_plate}`}>
             <FileText className="h-6 w-6 mb-1" />
             <span>View History</span>
           </Link>

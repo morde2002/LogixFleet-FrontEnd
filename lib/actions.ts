@@ -13,7 +13,7 @@ const USERS_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/User"
 const USERS_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 
 const USER_DETAILS_API_URL = "https://rjlogistics.logixfleetapp.com/api/method/erpnext.api.get_user_details"
-const USER_DETAILS_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
+const USER_DETAILS_API_TOKEN = "13560c2ae837ee8:47a214defca981e"
 
 const CREATE_USER_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/User"
 const CREATE_USER_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
@@ -42,6 +42,32 @@ const DRIVER_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 // Add this new API endpoint for years
 const YEAR_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Year"
 const YEAR_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
+
+// Add these new API endpoints and tokens after the existing ones at the top of the file
+
+// Inspection API endpoints
+const INSPECTION_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Insurance"
+const INSPECTION_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
+
+// Vehicle Service API endpoints
+const VEHICLE_SERVICE_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Vehicle Service"
+const VEHICLE_SERVICE_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
+
+// Service Type API endpoint
+const SERVICE_TYPE_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Type of Service"
+const SERVICE_TYPE_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
+
+// Service Provider API endpoint
+const SERVICE_PROVIDER_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Service Provider"
+const SERVICE_PROVIDER_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
+
+// Vehicle Inspection API endpoints
+const VEHICLE_INSPECTION_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Vehicle Inspection"
+const VEHICLE_INSPECTION_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
+
+// Issue API endpoint
+const ISSUE_API_URL = "https://rjlogistics.logixfleetapp.com/api/resource/Issue"
+const ISSUE_API_TOKEN = "326ce9899dd14ad:40bdcef41b46097"
 
 // Update just the login function to properly handle special admin emails
 export async function login({
@@ -75,14 +101,16 @@ export async function login({
       }
 
       // Set cookies
-      cookies().set("user_id", userData.id, {
+      ;(
+        await // Set cookies
+        cookies()
+      ).set("user_id", userData.id, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         maxAge: 60 * 60 * 24 * 7, // 1 week
         path: "/",
       })
-
-      cookies().set("user_data", JSON.stringify(userData), {
+      ;(await cookies()).set("user_data", JSON.stringify(userData), {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         maxAge: 60 * 60 * 24 * 7, // 1 week
@@ -145,7 +173,10 @@ export async function login({
         }
 
         // Set a cookie with user information
-        cookies().set("user_id", userData.id, {
+        ;(
+          await // Set a cookie with user information
+          cookies()
+        ).set("user_id", userData.id, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           maxAge: 60 * 60 * 24 * 7, // 1 week
@@ -153,7 +184,10 @@ export async function login({
         })
 
         // Store additional user data
-        cookies().set("user_data", JSON.stringify(userData), {
+        ;(
+          await // Store additional user data
+          cookies()
+        ).set("user_data", JSON.stringify(userData), {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           maxAge: 60 * 60 * 24 * 7, // 1 week
@@ -171,15 +205,13 @@ export async function login({
           role: "User", // Default to User if role not provided
           permissions: {},
         }
-
-        cookies().set("user_id", userData.id, {
+        ;(await cookies()).set("user_id", userData.id, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           maxAge: 60 * 60 * 24 * 7, // 1 week
           path: "/",
         })
-
-        cookies().set("user_data", JSON.stringify(userData), {
+        ;(await cookies()).set("user_data", JSON.stringify(userData), {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           maxAge: 60 * 60 * 24 * 7, // 1 week
@@ -212,6 +244,7 @@ export async function login({
         Vehicle: ["read", "write", "create", "delete"],
         Driver: ["read", "write", "create", "delete"],
         "Vehicle Inspection": ["read", "write", "create", "delete", "submit"],
+        Issue: ["read", "write", "create", "delete", "submit"],
         Report: ["read", "write", "create"],
       }
     } else if (email.toLowerCase().includes("manager")) {
@@ -222,6 +255,7 @@ export async function login({
         Vehicle: ["read", "write"],
         Driver: ["read", "write", "create"],
         "Vehicle Inspection": ["read", "write", "create"],
+        Issue: ["read", "write", "create"],
         Report: ["read"],
       }
     } else {
@@ -231,6 +265,7 @@ export async function login({
         Vehicle: ["read"],
         Driver: ["read"],
         "Vehicle Inspection": ["read", "create"],
+        Issue: ["read", "create"],
         Report: [],
       }
     }
@@ -243,15 +278,13 @@ export async function login({
       roles: mockRoles,
       permissions: mockPermissions,
     }
-
-    cookies().set("user_id", userData.id, {
+    ;(await cookies()).set("user_id", userData.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7, // 1 week
       path: "/",
     })
-
-    cookies().set("user_data", JSON.stringify(userData), {
+    ;(await cookies()).set("user_data", JSON.stringify(userData), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7, // 1 week
@@ -264,8 +297,11 @@ export async function login({
 
 export async function logout() {
   // Clear the authentication cookies
-  cookies().delete("user_id")
-  cookies().delete("user_data")
+  ;(
+    await // Clear the authentication cookies
+    cookies()
+  ).delete("user_id")
+  ;(await cookies()).delete("user_data")
   redirect("/")
 }
 
@@ -609,7 +645,7 @@ export async function deleteUser(userId: string) {
 }
 
 // Vehicle management functions
-export async function fetchVehicles() {
+export async function fetchVehicles(p0: { action: string; name: string }) {
   try {
     const currentUser = await getCurrentUser()
 
@@ -625,7 +661,7 @@ export async function fetchVehicles() {
         headers: {
           Authorization: `token ${VEHICLE_API_TOKEN}`,
         },
-        cache: "no-store",
+        next: { revalidate: 60 }, // Cache for 60 seconds
       },
     )
 
@@ -635,40 +671,10 @@ export async function fetchVehicles() {
     }
 
     const data = await response.json()
-    console.log("Vehicles data:", data)
     return { data: data.data || [] }
   } catch (error) {
     console.error("Error fetching vehicles:", error)
-
-    // Fallback to mock data if API fails
-    const mockVehicles = [
-      {
-        license_plate: "KBN 987Y",
-        make: "Dai Hatsu",
-        model: "Mira",
-        vehicle_type: "Car",
-        driver: "HR-DRI-2025-00001",
-        year: "2025",
-        fuel_type: "Petrol",
-        color: "Silver",
-        doors: 4,
-        wheels: 4,
-      },
-      {
-        license_plate: "KDE 366F",
-        make: "Dai Hatsu",
-        model: "Mira",
-        vehicle_type: "Car",
-        driver: "HR-DRI-2025-00001",
-        year: "2025",
-        fuel_type: "Petrol",
-        color: "Silver",
-        doors: 4,
-        wheels: 4,
-      },
-    ]
-
-    return { data: mockVehicles }
+    return { error: "Failed to fetch vehicles. Please try again." }
   }
 }
 
@@ -761,6 +767,34 @@ export async function createVehicle(vehicleData: {
   }
 }
 
+
+export async function deleteVehicle(vehicleId: string) {
+  try {
+    const currentUser = await getCurrentUser()
+
+    if (!currentUser || !currentUser.permissions?.Vehicle?.includes("delete")) {
+      return { error: "You don't have permission to delete vehicles." }
+    }
+
+    const response = await fetch(`${VEHICLE_API_URL}/${vehicleId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `token ${VEHICLE_API_TOKEN}`,
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      return { error: errorData.message || "Failed to delete vehicle." }
+    }
+
+    revalidatePath("/dashboard/vehicles")
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting vehicle:", error)
+    return { error: "An error occurred while deleting the vehicle." }
+  }
+}
 // New functions for vehicle makes and models
 export async function fetchVehicleMakes() {
   try {
@@ -1003,5 +1037,473 @@ export async function fetchYears() {
     }))
 
     return { data: mockYears }
+  }
+}
+
+// Add these new functions at the end of the file
+
+// Inspection management functions
+export async function fetchInspections() {
+  try {
+    console.log("Fetching inspections from:", INSPECTION_API_URL)
+    const response = await fetch(
+      `${INSPECTION_API_URL}?fields=["name","vehicle","company_providers","commencing_date","expiry_date"]`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `token ${INSPECTION_API_TOKEN}`,
+        },
+        cache: "no-store",
+      },
+    )
+
+    if (!response.ok) {
+      console.error("Failed to fetch inspections:", response.status, response.statusText)
+      const errorText = await response.text()
+      console.error("Error response:", errorText)
+      throw new Error(`Failed to fetch inspections: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log("Inspections data:", data)
+    return { data: data.data || [] }
+  } catch (error) {
+    console.error("Error fetching inspections:", error)
+    return { error: "Failed to fetch inspections. Please try again." }
+  }
+}
+
+export async function fetchInspectionById(inspectionId: string) {
+  try {
+    const response = await fetch(`${INSPECTION_API_URL}/${inspectionId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `token ${INSPECTION_API_TOKEN}`,
+      },
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch inspection details: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return { data: data.data || null }
+  } catch (error) {
+    console.error("Error fetching inspection details:", error)
+    return { error: "Failed to fetch inspection details. Please try again." }
+  }
+}
+
+export async function createInspection(inspectionData: any) {
+  try {
+    const response = await fetch(INSPECTION_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `token ${INSPECTION_API_TOKEN}`,
+      },
+      body: JSON.stringify({
+        data: inspectionData,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to create inspection: ${response.status} ${response.statusText}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error("Error creating inspection:", error)
+    return { error: "Failed to create inspection. Please try again." }
+  }
+}
+
+// Vehicle Service management functions
+export async function fetchVehicleServices() {
+  try {
+    console.log("Fetching vehicle services from:", VEHICLE_SERVICE_API_URL)
+    const response = await fetch(
+      `${VEHICLE_SERVICE_API_URL}?fields=["name","vehicle","type_of_service","service_provider","current_odometer","next_expected_km","next_expected_service_date"]`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `token ${VEHICLE_SERVICE_API_TOKEN}`,
+        },
+        cache: "no-store",
+      },
+    )
+
+    if (!response.ok) {
+      console.error("Failed to fetch vehicle services:", response.status, response.statusText)
+      const errorText = await response.text()
+      console.error("Error response:", errorText)
+      throw new Error(`Failed to fetch vehicle services: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log("Vehicle services data:", data)
+    return { data: data.data || [] }
+  } catch (error) {
+    console.error("Error fetching vehicle services:", error)
+    return { error: "Failed to fetch vehicle services. Please try again." }
+  }
+}
+
+export async function fetchVehicleServiceById(serviceId: string) {
+  try {
+    const response = await fetch(`${VEHICLE_SERVICE_API_URL}/${serviceId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `token ${VEHICLE_SERVICE_API_TOKEN}`,
+      },
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch vehicle service details: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return { data: data.data || null }
+  } catch (error) {
+    console.error("Error fetching vehicle service details:", error)
+    return { error: "Failed to fetch vehicle service details. Please try again." }
+  }
+}
+
+export async function createVehicleService(serviceData: any) {
+  try {
+    const response = await fetch(VEHICLE_SERVICE_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `token ${VEHICLE_SERVICE_API_TOKEN}`,
+      },
+      body: JSON.stringify({
+        data: serviceData,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      return { error: errorData.message || "Failed to create vehicle service." }
+    }
+
+    const data = await response.json()
+    return { success: true, data }
+  } catch (error) {
+    console.error("Error creating vehicle service:", error)
+    return { error: "Failed to create vehicle service. Please try again." }
+  }
+}
+
+// Service Type API functions
+export async function fetchServiceTypes() {
+  try {
+    console.log("Fetching service types from:", SERVICE_TYPE_API_URL)
+    const response = await fetch(SERVICE_TYPE_API_URL, {
+      method: "GET",
+      headers: {
+        Authorization: `token ${SERVICE_TYPE_API_TOKEN}`,
+      },
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      console.error("Failed to fetch service types:", response.status, response.statusText)
+      const errorText = await response.text()
+      console.error("Error response:", errorText)
+      throw new Error(`Failed to fetch service types: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log("Service types data:", data)
+    return { data: data.data || [] }
+  } catch (error) {
+    console.error("Error fetching service types:", error)
+    // Fallback to mock data if API fails
+    const mockServiceTypes = [
+      { name: "Oil Change" },
+      { name: "Tire Rotation" },
+      { name: "Brake Service" },
+      { name: "Engine Tune-up" },
+      { name: "Transmission Service" },
+    ]
+
+    return { data: mockServiceTypes }
+  }
+}
+
+// Service Provider API functions
+export async function fetchServiceProviders() {
+  try {
+    console.log("Fetching service providers from:", SERVICE_PROVIDER_API_URL)
+    const response = await fetch(SERVICE_PROVIDER_API_URL, {
+      method: "GET",
+      headers: {
+        Authorization: `token ${SERVICE_PROVIDER_API_TOKEN}`,
+      },
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      console.error("Failed to fetch service providers:", response.status, response.statusText)
+      const errorText = await response.text()
+      console.error("Error response:", errorText)
+      throw new Error(`Failed to fetch service providers: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log("Service providers data:", data)
+    return { data: data.data || [] }
+  } catch (error) {
+    console.error("Error fetching service providers:", error)
+    // Fallback to mock data if API fails
+    const mockServiceProviders = [
+      { name: "AutoCare Center" },
+      { name: "Quick Service Garage" },
+      { name: "Premium Auto Repair" },
+      { name: "Fleet Maintenance Co." },
+      { name: "City Auto Shop" },
+    ]
+
+    return { data: mockServiceProviders }
+  }
+}
+
+// Vehicle Inspection management functions
+export async function fetchVehicleInspections() {
+  try {
+    const currentUser = await getCurrentUser()
+
+    if (!currentUser) {
+      return { error: "You must be logged in to view vehicle inspections." }
+    }
+
+    console.log("Fetching vehicle inspections from:", VEHICLE_INSPECTION_API_URL)
+    const response = await fetch(`${VEHICLE_INSPECTION_API_URL}?fields=["name","status","inspection_type","vehicle"]`, {
+      method: "GET",
+      headers: {
+        Authorization: `token ${VEHICLE_INSPECTION_API_TOKEN}`,
+      },
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      console.error("Failed to fetch vehicle inspections:", response.status, response.statusText)
+      const errorText = await response.text()
+      console.error("Error response:", errorText)
+      throw new Error(`Failed to fetch vehicle inspections: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log("Vehicle inspections data:", data)
+    return { data: data.data || [] }
+  } catch (error) {
+    console.error("Error fetching vehicle inspections:", error)
+    return { error: "Failed to fetch vehicle inspections. Please try again." }
+  }
+}
+
+export async function fetchVehicleInspectionById(inspectionId: string) {
+  try {
+    const currentUser = await getCurrentUser()
+
+    if (!currentUser) {
+      return { error: "You must be logged in to view vehicle inspection details." }
+    }
+
+    const response = await fetch(`${VEHICLE_INSPECTION_API_URL}/${inspectionId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `token ${VEHICLE_INSPECTION_API_TOKEN}`,
+      },
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      return { error: errorData.message || "Failed to fetch vehicle inspection details." }
+    }
+
+    const data = await response.json()
+    return { data: data.data || null }
+  } catch (error) {
+    console.error("Error fetching vehicle inspection details:", error)
+    return { error: "An error occurred while fetching vehicle inspection details." }
+  }
+}
+
+export async function createVehicleInspection(inspectionData: any) {
+  try {
+    // Check if the current user has permission to create vehicle inspections
+    const currentUser = await getCurrentUser()
+
+    if (!currentUser || (currentUser.role !== "Admin" && currentUser.role !== "FleetManager")) {
+      return { error: "You don't have permission to create vehicle inspections." }
+    }
+
+    console.log("Creating vehicle inspection with data:", inspectionData)
+
+    // Call the API to create a new vehicle inspection
+    const response = await fetch(VEHICLE_INSPECTION_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `token ${VEHICLE_INSPECTION_API_TOKEN}`,
+      },
+      body: JSON.stringify({
+        data: inspectionData,
+      }),
+      cache: "no-store",
+    })
+
+    const responseText = await response.text()
+    console.log("API Response:", responseText)
+
+    let data
+    try {
+      data = JSON.parse(responseText)
+    } catch (e) {
+      console.error("Error parsing JSON response:", e)
+      return { error: "Invalid response from server" }
+    }
+
+    if (!response.ok) {
+      return { error: data.message || data.exception || "Failed to create vehicle inspection." }
+    }
+
+    revalidatePath("/dashboard/vehicles/inspections")
+
+    return { success: true, data }
+  } catch (error) {
+    console.error("Error creating vehicle inspection:", error)
+    return { error: "An error occurred while creating the vehicle inspection." }
+  }
+}
+
+// Issue management functions
+// Create a new issue (server action)
+export async function createIssueAction(formData: FormData) {
+  try {
+    const issueData = {
+      driver: formData.get("driver"),
+      vehicle: formData.get("vehicle"),
+      grand_total: Number.parseFloat(formData.get("grand_total") as string),
+      priority: formData.get("priority"),
+      issue_type: formData.get("issue_type"),
+      status: formData.get("status"),
+      estimated_date_of_repair: formData.get("estimated_date_of_repair"),
+      mechanic: formData.get("mechanic"),
+      description: formData.get("description"),
+    }
+
+    const response = await fetch(ISSUE_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `token ${ISSUE_API_TOKEN}`,
+      },
+      body: JSON.stringify(issueData),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || `Failed to create issue: ${response.status} ${response.statusText}`)
+    }
+
+    // Revalidate the issues page to show the new issue
+    revalidatePath("/dashboard/issues")
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error creating issue:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "An unknown error occurred",
+    }
+  }
+}
+
+// Fetch issues (server action)
+export async function fetchIssuesAction() {
+  try {
+    const fields = ["name", "vehicle", "driver", "grand_total", "priority", "issue_type", "status"]
+
+    const response = await fetch(`${ISSUE_API_URL}?fields=${JSON.stringify(fields)}`, {
+      method: "GET",
+      headers: {
+        Authorization: `token ${ISSUE_API_TOKEN}`,
+      },
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch issues: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return { success: true, data: data.data || [] }
+  } catch (error) {
+    console.error("Error fetching issues:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "An unknown error occurred",
+    }
+  }
+}
+
+// Add these server actions at the end of the file
+
+// Fetch vehicle GPS data (server action)
+export async function fetchVehicleGPSAction(companyId: string, licensePlate: string) {
+  try {
+    const response = await fetch(
+      `http://dev.logixfleetapi.com/api/telematics?company_id=${companyId}&license_plate=${encodeURIComponent(licensePlate)}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Token fb628bd3c7a3965bedec9aaf00882bc3cf7e3114`,
+        },
+        cache: "no-store",
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch GPS data: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return { success: true, data }
+  } catch (error) {
+    console.error("Error fetching GPS data:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "An unknown error occurred",
+    }
+  }
+}
+
+// Fetch all vehicles with GPS data (server action)
+export async function fetchVehiclesWithGPSAction(companyId: string) {
+  try {
+    // In a real implementation, you would fetch from the API
+    // For now, we'll return mock data since the endpoint might not exist
+
+    // Mock data for testing
+    const mockVehicles = [
+      { license_plate: "KDA 381X", alias: "KDA 381X" },
+      { license_plate: "KBN 987Y", alias: "KBN 987Y" },
+      { license_plate: "KDE 366F", alias: "KDE 366F" },
+    ]
+
+    return { success: true, data: { results: mockVehicles } }
+  } catch (error) {
+    console.error("Error fetching vehicles with GPS:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "An unknown error occurred",
+    }
   }
 }
